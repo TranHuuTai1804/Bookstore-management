@@ -1,0 +1,35 @@
+-- Tạo cơ sở dữ liệu nếu chưa tồn tại
+CREATE DATABASE IF NOT EXISTS user_managements;
+
+-- Sử dụng cơ sở dữ liệu vừa tạo
+USE user_managements;
+
+-- Tạo bảng users
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY, -- Mã người dùng (khóa chính)
+    email VARCHAR(100) NOT NULL UNIQUE, -- Email (phải là duy nhất)
+    password VARCHAR(255) NOT NULL,    -- Mật khẩu (được mã hóa)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Ngày tạo
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Ngày cập nhật
+    status ENUM('active', 'inactive', 'banned') DEFAULT 'active' -- Trạng thái tài khoản
+);
+
+-- Tạo bảng login_attempts
+CREATE TABLE login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY, -- ID bản ghi
+    user_id INT,                       -- ID người dùng
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian đăng nhập
+    success BOOLEAN NOT NULL,          -- Đăng nhập thành công hay thất bại
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL -- Ràng buộc khóa ngoại
+);
+
+-- Thêm lịch sử đăng nhập mẫu
+INSERT INTO login_attempts (user_id, success) VALUES 
+(1, true), -- Đăng nhập thành công cho admin
+(2, false); -- Đăng nhập thất bại cho john_doe
+
+
+-- Kiểm tra kết quả (truy vấn mẫu)
+SELECT * FROM users;
+SELECT * FROM login_attempts;
+
