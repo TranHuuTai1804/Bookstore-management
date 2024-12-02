@@ -28,8 +28,43 @@ INSERT INTO login_attempts (user_id, success) VALUES
 (1, true), -- Đăng nhập thành công cho admin
 (2, false); -- Đăng nhập thất bại cho john_doe
 
+-- Tạo bảng books
+CREATE TABLE books (
+    id INT AUTO_INCREMENT PRIMARY KEY,       -- ID sách (khóa chính)
+    title VARCHAR(255) NOT NULL,             -- Tên sách
+    category VARCHAR(100),                   -- Thể loại
+    author VARCHAR(100),                     -- Tác giả
+    quantity INT DEFAULT 0,                  -- Số lượng sách còn trong kho
+    price DECIMAL(10, 2) NOT NULL,           -- Giá sách
+    img VARCHAR(255),                        -- Đường dẫn tới hình ảnh
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Ngày thêm sách
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Ngày cập nhật sách
+);
+
+
+-- Thêm dữ liệu mẫu vào bảng books
+INSERT INTO books (title, category, author, quantity, price, img) VALUES  
+('Dế Mèn Phiêu Lưu Ký', 'Văn học thiếu nhi', 'Tô Hoài', 10, 15.99, '/book/book1.png'),  
+('Mắt Biếc', 'Tiểu thuyết', 'Nguyễn Nhật Ánh', 20, 18.50, '/book/book1.png'),  
+('Truyện Kiều', 'Thơ ca', 'Nguyễn Du', 12, 25.00, '/book/book1.png'),  
+('Nhật Ký Đặng Thùy Trâm', 'Hồi ký', 'Đặng Thùy Trâm', 5, 19.99, '/book/book1.png'),  
+('Tôi Thấy Hoa Vàng Trên Cỏ Xanh', 'Tiểu thuyết', 'Nguyễn Nhật Ánh', 18, 22.00, '/book/book1.png'),  
+('Cánh Đồng Bất Tận', 'Tiểu thuyết', 'Nguyễn Ngọc Tư', 15, 14.99, '/book/book1.png'),  
+('Đất Rừng Phương Nam', 'Văn học thiếu nhi', 'Đoàn Giỏi', 25, 12.50, '/book/book1.png'),  
+('Chinh Phụ Ngâm Khúc', 'Thơ ca', 'Đoàn Thị Điểm', 8, 20.00, '/book/book1.png'),  
+('Quê Nội', 'Văn học thiếu nhi', 'Võ Quảng', 30, 10.99, '/book/book1.png'),  
+('Lặng Lẽ Sa Pa', 'Hồi ký', 'Nguyễn Thành Long', 12, 13.50, '/book/book1.png'),  
+('Đồi Gió Hú', 'Tiểu thuyết', 'Emily Brontë (Dịch giả: Lê Huy Lâm)', 6, 17.99, '/book/book1.png'),  
+('Vang Bóng Một Thời', 'Thơ ca', 'Nguyễn Tuân', 10, 16.50, '/book/book1.png'),  
+('Lịch Sử Việt Nam', 'Hồi ký', 'Nguyễn Văn A', 4, 14.99, '/book/book1.png'),  
+('Quà Tặng Cuộc Sống', 'Văn học thiếu nhi', 'Nhiều Tác Giả', 20, 12.00, '/book/book1.png');
+
+
 
 -- Kiểm tra kết quả (truy vấn mẫu)
 SELECT * FROM users;
 SELECT * FROM login_attempts;
+select * FROM books
+
+
 

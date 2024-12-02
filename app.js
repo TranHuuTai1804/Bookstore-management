@@ -141,31 +141,42 @@ app.post("/signup", (req, res) => {
 });
 
 // API để lưu sách
-app.post("/api/books", (req, res) => {
-  const books = req.body.books;
+// app.post("/api/books", (req, res) => {
+//   const books = req.body.books;
 
-  if (!Array.isArray(books) || books.length === 0) {
-    return res.status(400).json({ message: "Invalid data format." });
-  }
+//   if (!Array.isArray(books) || books.length === 0) {
+//     return res.status(400).json({ message: "Invalid data format." });
+//   }
 
-  const query = `
-      INSERT INTO Sach (ID_sach, Ten_sach, The_loai, Ten_tac_gia, So_luong)
-      VALUES ?`;
+//   const query = `
+//       INSERT INTO Sach (ID_sach, Ten_sach, The_loai, Ten_tac_gia, So_luong)
+//       VALUES ?`;
 
-  const values = books.map((book, index) => [
-    book.no || index + 1,
-    book.name,
-    book.category,
-    book.author,
-    book.quantity,
-  ]);
+//   const values = books.map((book, index) => [
+//     book.no || index + 1,
+//     book.name,
+//     book.category,
+//     book.author,
+//     book.quantity,
+//   ]);
 
-  db.query(query, [values], (err, result) => {
+//   db.query(query, [values], (err, result) => {
+//     if (err) {
+//       console.error(err);
+//       return res.status(500).json({ message: "Failed to insert books." });
+//     }
+//     res.status(200).json({ message: "Books saved successfully." });
+//   });
+// });
+
+app.get("/api/books", (req, res) => {
+  const sql = "SELECT * FROM books";
+  connection.query(sql, (err, results) => {
     if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Failed to insert books." });
+      res.status(500).json({ error: err.message });
+    } else {
+      res.json(results);
     }
-    res.status(200).json({ message: "Books saved successfully." });
   });
 });
 
@@ -189,6 +200,14 @@ app.get("/bookinvoice", (req, res) => {
 
 app.get("/receipts", (req, res) => {
   res.sendFile(join(__dirname, "receipts.html"));
+});
+
+app.get("/report", (req, res) => {
+  res.sendFile(join(__dirname, "report.html"));
+});
+
+app.get("/lookup", (req, res) => {
+  res.sendFile(join(__dirname, "lookup.html"));
 });
 
 // Khởi động server

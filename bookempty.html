@@ -35,7 +35,7 @@
     <header class="header">
         <div class="navbar">
             <div class="navbar-left">
-                <img src="/img/logo.svg" alt="">
+                <a href="/home"><img src="/img/logo.svg" alt=""></a>
                 <ul>
                     <li><a href="/home">Home</a></li>
                     <li><a href="#">About us</a></li>
@@ -56,8 +56,11 @@
     </div>
 
     <!-- Tiêu đề Date -->
-    <div class="date-section">
+    <div class="date">
         <h3>Date:</h3>
+        <div class="date-picker">
+                <input type="text" id="date-receipt" placeholder="Select Date" readonly>
+        </div>
     </div>
 
     <!-- Bảng -->
@@ -70,7 +73,6 @@
                     <th>Category</th>
                     <th>Author</th>
                     <th>Quantity</th>
-                    <th>Price</th>
                 </tr>
             </thead>
             <tbody id="table-body">
@@ -81,7 +83,6 @@
                     <td><input type="text" name="category1" placeholder="Category"></td>
                     <td><input type="text" name="author1" placeholder="Author"></td>
                     <td><input type="number" name="quantity1" placeholder="Quantity"></td>
-                    <td><input type="number" name="price1" placeholder="Price"></td>
                 </tr>
             </tbody>
         </table>
@@ -98,9 +99,10 @@
     <div id="hero-menu" class="menu-ovl" style="display: none;">
         <button><a href="/bookempty">Book Entry Form</a></button>
         <button><a href="/bookinvoice">Book Invoice</a></button>
-        <button><a href="#">Book Lookup</a></button>
+        <button><a href="/lookup">Book Lookup</a></button>
         <button><a href="/receipts">Receipt</a></button>
-        <button><a href="#">Monthly Report</a></button>
+        <button><a href="/report">Monthly Report</a></button>
+        <button><a href="/edit">Edit Regulations</a></button>
     </div>
 
     <!-- Toast thông báo -->
@@ -109,30 +111,48 @@
 </body>
     <script>
 
-    function toggleMenu() {
+function toggleMenu() {
             const menu = document.getElementById("hero-menu");
             const overlay = document.getElementById("overlay");
             const icon = document.querySelector(".open-menu");
-            const body = document.body; // Hoặc bạn có thể chọn phần tử cha khác
+            const body = document.body;
 
             // Kiểm tra nếu menu đang ẩn
             if (menu.style.display === "none" || menu.style.display === "") {
                 menu.style.display = "block"; // Mở menu
-                menu.style.left = "0"; // Đặt menu vào vị trí mong muốn
+                setTimeout(() => {
+                    menu.style.left = "0"; // Đặt menu vào vị trí mong muốn với hiệu ứng trượt
+                }, 10); // Đảm bảo hiệu ứng trượt được áp dụng
                 overlay.style.display = "block"; // Hiện overlay
                 icon.textContent = "<"; // Đổi icon thành '<'
 
                 // Thêm lớp menu-open để di chuyển icon
                 body.classList.add("menu-open");
             } else {
-                menu.style.display = "none"; // Đóng menu
+                menu.style.left = "-30%"; // Ẩn menu với hiệu ứng trượt
                 overlay.style.display = "none"; // Ẩn overlay
                 icon.textContent = ">"; // Đổi icon thành '>'
 
                 // Loại bỏ lớp menu-open để di chuyển icon về vị trí ban đầu
                 body.classList.remove("menu-open");
+
+                setTimeout(() => {
+                    menu.style.display = "none"; // Ẩn menu sau khi trượt hoàn tất
+                }, 300); // Thời gian trượt hoàn tất trước khi ẩn menu
             }
-            }
+        }
+
+        // Ẩn thanh cuộn khi người dùng lướt lên hoặc xuống
+        const menuOv = document.getElementById("hero-menu");
+
+        menuOv.addEventListener('scroll', function() {
+            menuOv.style.scrollbarWidth = 'none'; // Ẩn thanh cuộn khi lướt
+            clearTimeout(menuOv.scrollTimeout);
+            
+            menuOv.scrollTimeout = setTimeout(function() {
+                menuOv.style.scrollbarWidth = 'thin'; // Hiển thị lại thanh cuộn khi ngừng lướt
+            }, 100); // Ẩn thanh cuộn khi lướt và hiển thị lại sau khi ngừng
+        });
 
         // Hàm thêm dòng mới vào bảng
         function addRow() {
@@ -145,7 +165,6 @@
                 <td><input type="text" placeholder="Category"></td>
                 <td><input type="text" placeholder="Author"></td>
                 <td><input type="number" placeholder="Quantity"></td>
-                <td><input type="number" placeholder="Price"></td>
             `;
         tableBody.appendChild(newRow);
         }
@@ -163,7 +182,6 @@
             category: cells[2].value,
             author: cells[3].value,
             quantity: cells[4].value,
-            price: cells[5].value,
             };
             books.push(bookData);
         });
@@ -182,7 +200,6 @@
                     <td><input type="text" name="category1" placeholder="Category"></td>
                     <td><input type="text" name="author1" placeholder="Author"></td>
                     <td><input type="number" name="quantity1" placeholder="Quantity"></td>
-                    <td><input type="number" name="price1" placeholder="Price"></td>
                 </tr>
             `;
         }
