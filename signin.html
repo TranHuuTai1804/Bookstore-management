@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookstore Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="left-section">
+      <div class="logo">
+        <img src="/img/bg-logo.png" class="bg-logo" alt="Bookstore Logo">
+        <div class="icon">
+            <img src="/img/logo.svg" class="img-logo" alt="Bookstore Icon">
+        </div>
+      </div>
+      <h2 class="sign_in">Welcome back</h2>
+      <form action="/login" method="POST" class="login-form">
+        <label for="email">Email</label>
+        <input type="email" name="email" placeholder="Enter your email" required />
+        <label for="password">Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required />
+        <a href="#" class="forgot-password">Forgot password?</a>
+        <button type="submit" class="login-button">Login now</button>
+      </form>
+      <p class="signup-text">
+        Don’t have an account? <a href="/signup" class="signup-link">Sign up</a>
+      </p>
+    </div>
+    <div class="right-section">
+      <img src="/img/bg.png" alt="Books Background" />
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Empty</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/home.css">
+    <style>
+        /* Style cho toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            visibility: hidden;
+            z-index: 10001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="navbar">
+            <div class="navbar-left">
+                <img src="/img/logo.svg" alt="">
+                <ul>
+                    <li><a href="/home">Home</a></li>
+                    <li><a href="#">About us</a></li>
+                    <li><a href="#">Staff</a></li>
+                </ul>
+            </div>
+
+            <div class="navbar-right">
+                <img src="/img/search.svg" alt="">
+                <button class="logout"><a href="/">Log Out</a></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Block Book Entry Form -->
+    <div class="book-entry-form">
+        <h2>Book Entry Form</h2>
+    </div>
+
+    <!-- Tiêu đề Date -->
+    <div class="date-section">
+        <h3>Date:</h3>
+    </div>
+
+    <!-- Bảng -->
+    <div class="date-section">
+        <table class="table-container">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Book</th>
+                    <th>Category</th>
+                    <th>Author</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Dòng 1, nhập liệu -->
+                <tr>
+                    <td><input type="text" name="no1" placeholder="1"></td>
+                    <td><input type="text" name="book1" placeholder="Book Name"></td>
+                    <td><input type="text" name="category1" placeholder="Category"></td>
+                    <td><input type="text" name="author1" placeholder="Author"></td>
+                    <td><input type="number" name="quantity1" placeholder="Quantity"></td>
+                    <td><input type="number" name="price1" placeholder="Price"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addRow()">+</button>
+    </div>
+    <button class="done-btn" onclick="submitBooks()">Done</button>
+
+    <button class="open-menu" onclick="toggleMenu()">></button>
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay"></div>
+
+    <!-- Menu Section -->
+    <div id="hero-menu" class="menu-ovl" style="display: none;">
+        <button><a href="/bookempty">Book Entry Form</a></button>
+        <button><a href="/bookinvoice">Book Invoice</a></button>
+        <button><a href="#">Book Lookup</a></button>
+        <button><a href="/receipts">Receipt</a></button>
+        <button><a href="#">Monthly Report</a></button>
+    </div>
+
+    <!-- Toast thông báo -->
+    <div id="toast" class="toast">Books added successfully!</div>
+
+</body>
+    <script>
+
+    function toggleMenu() {
+            const menu = document.getElementById("hero-menu");
+            const overlay = document.getElementById("overlay");
+            const icon = document.querySelector(".open-menu");
+            const body = document.body; // Hoặc bạn có thể chọn phần tử cha khác
+
+            // Kiểm tra nếu menu đang ẩn
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block"; // Mở menu
+                menu.style.left = "0"; // Đặt menu vào vị trí mong muốn
+                overlay.style.display = "block"; // Hiện overlay
+                icon.textContent = "<"; // Đổi icon thành '<'
+
+                // Thêm lớp menu-open để di chuyển icon
+                body.classList.add("menu-open");
+            } else {
+                menu.style.display = "none"; // Đóng menu
+                overlay.style.display = "none"; // Ẩn overlay
+                icon.textContent = ">"; // Đổi icon thành '>'
+
+                // Loại bỏ lớp menu-open để di chuyển icon về vị trí ban đầu
+                body.classList.remove("menu-open");
+            }
+            }
+
+        // Hàm thêm dòng mới vào bảng
+        function addRow() {
+        const tableBody = document.getElementById("table-body");
+        const newRow = document.createElement("tr");
+
+        newRow.innerHTML = `
+                <td><input type="text" placeholder="No."></td>
+                <td><input type="text" placeholder="Book Name"></td>
+                <td><input type="text" placeholder="Category"></td>
+                <td><input type="text" placeholder="Author"></td>
+                <td><input type="number" placeholder="Quantity"></td>
+                <td><input type="number" placeholder="Price"></td>
+            `;
+        tableBody.appendChild(newRow);
+        }
+
+        // Hàm xử lý khi nhấn nút Done
+        function submitBooks() {
+        const rows = document.querySelectorAll("#table-body tr");
+        const books = [];
+
+        rows.forEach((row) => {
+            const cells = row.querySelectorAll("input");
+            const bookData = {
+            no: cells[0].value,
+            name: cells[1].value,
+            category: cells[2].value,
+            author: cells[3].value,
+            quantity: cells[4].value,
+            price: cells[5].value,
+            };
+            books.push(bookData);
+        });
+
+        // Gửi dữ liệu đến API hoặc xử lý tiếp theo
+        console.log(books);
+
+        // Hiển thị toast thông báo
+        showToast();
+
+        // Làm mới bảng sau khi nhấn Done
+        document.getElementById("table-body").innerHTML = `
+                <tr>
+                    <td><input type="text" name="no1" placeholder="1"></td>
+                    <td><input type="text" name="book1" placeholder="Book Name"></td>
+                    <td><input type="text" name="category1" placeholder="Category"></td>
+                    <td><input type="text" name="author1" placeholder="Author"></td>
+                    <td><input type="number" name="quantity1" placeholder="Quantity"></td>
+                    <td><input type="number" name="price1" placeholder="Price"></td>
+                </tr>
+            `;
+        }
+        // Hàm hiển thị toast
+        function showToast() {
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+
+        // Ẩn toast sau 3 giây
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+        }
+
+    </script>
+</html>
