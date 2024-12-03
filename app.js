@@ -17,8 +17,8 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "Phuc",
-  database: "World",
+  password: "",
+  database: "QLNhasach",
 });
 
 connection.connect((err) => {
@@ -170,7 +170,7 @@ app.post("/signup", (req, res) => {
 // });
 
 app.get("/api/books", (req, res) => {
-  const sql = "SELECT * FROM books";
+  const sql = "SELECT * FROM Sach";
   connection.query(sql, (err, results) => {
     if (err) {
       res.status(500).json({ error: err.message });
