@@ -2,7 +2,7 @@ import express from "express";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import bodyParser from "body-parser";
-import mysql from "mysql";
+import mysql from "mysql2";
 import bcrypt from "bcrypt";
 
 const port = 3000;
@@ -17,8 +17,8 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
-  database: "user_managements",
+  password: "Phuc",
+  database: "World",
 });
 
 connection.connect((err) => {
