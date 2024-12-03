@@ -34,7 +34,13 @@
 
     <!-- Seacch , Shortlist -->
     <div class="search-container">
-        <input type="text" id="search-input" class="search-input" placeholder="Search books...">
+        <div class="row">
+            <input type="text" id="search-input" class="search-input" placeholder="Search books...">
+            <div class="result-ip">
+            </div>
+        </div>
+        
+
         <div class="search-btns">
             <button class="filter-btn" onclick="filterByCategory('Văn học thiếu nhi', this)">Văn học thiếu nhi</button>
             <button class="filter-btn" onclick="filterByCategory('Tiểu thuyết', this)">Tiểu thuyết</button>
@@ -69,6 +75,76 @@
 
 
     <script>
+
+    // Khởi tạo mảng chứa tên sách
+    let bookTitles = [];
+
+    // Hàm lấy danh sách sách từ API và cập nhật mảng bookTitles
+    async function fetchBookTitles() {
+        try {
+            const response = await fetch('/api/books');
+            if (!response.ok) {
+                throw new Error('Failed to fetch books');
+            }
+            const books = await response.json();
+
+            // Cập nhật mảng bookTitles với danh sách tên sách
+            bookTitles = books.map(book => book.title);
+
+            // Đảm bảo rằng kết quả được hiển thị sau khi dữ liệu đã được lấy
+            console.log('Danh sách tên sách hiện tại:', bookTitles);
+
+        } catch (error) {
+            console.error('Error fetching books:', error);
+        }
+    }
+
+    // Gọi hàm fetchBookTitles để lấy dữ liệu và cập nhật mảng ngay khi trang được tải
+    document.addEventListener('DOMContentLoaded', async () => {
+        await fetchBookTitles();  // Đảm bảo dữ liệu được tải trước khi cho phép tìm kiếm
+    });
+
+    // Định nghĩa các phần tử trong DOM
+    const resultIp = document.querySelector(".result-ip");
+    const searchInput = document.querySelector(".search-input");
+
+    // Xử lý sự kiện keyup khi người dùng nhập vào ô tìm kiếm
+    searchInput.onkeyup = function () {
+        let result = [];
+        let input = searchInput.value;
+
+        // Nếu input có dữ liệu
+        if (input.length) {
+            result = bookTitles.filter((keyword) => {
+                return keyword.toLowerCase().includes(input.toLowerCase());
+            });
+
+            // Hiển thị kết quả tìm kiếm
+            display(result);
+        }
+
+        // Nếu không có kết quả, xóa danh sách kết quả
+        if (!input.length || !result.length) {
+            resultIp.innerHTML = '';
+        }
+    };
+
+    // Hàm hiển thị kết quả tìm kiếm
+    function display(result) {
+        const content = result.map((list) => {
+            return "<li onclick=selectInput(this)>" + list + "</li>";
+        });
+
+        // Thêm danh sách vào resultIp
+        resultIp.innerHTML = "<ul>" + content.join('') + "</ul>";
+    }
+
+    // Hàm khi người dùng chọn kết quả tìm kiếm
+    function selectInput(list) {
+        searchInput.value = list.innerHTML;
+        resultIp.innerHTML = '';  // Xóa kết quả sau khi chọn
+    }
+
     // Hàm hiển thị danh sách mặc định
     async function showDefaultList(button = null) {
         try {
