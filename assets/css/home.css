@@ -108,9 +108,6 @@ body {
     gap: 40px;
 }
 
-.navbar-right img {
-    width: 30px;
-}
 
 .navbar-right button{ 
     width: 90px;
@@ -626,28 +623,23 @@ input[type="text"].search-input {
     gap: 10px;
 }
 
-.search-btns button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: #ccc; 
-    color: white; 
-    border: none; 
-    border-radius: 5px; 
-    cursor: pointer; 
-    transition: all 0.3s ease; 
+
+.filter-btn {
+    padding: 10px 15px;
+    border: none;
+    background-color: #f4f4f4;
+    color: #333;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-.search-btns button:hover {
-    background-color: #45a049; 
-    transform: scale(1.05); 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+.filter-btn:hover {
+    background-color: #e2e2e2;
 }
 
-.search-btns button:last-child {
-    margin-right: 0;
-}
-
-.search-btns button a {
+.filter-btn.active {
+    background-color: #28a745;
     color: white;
 }
 
@@ -741,5 +733,34 @@ input[type="text"].search-input {
     color: #333;
     font-size: 0.875rem;
     z-index: 1; 
+}
+
+/* Table lookup */ 
+.book-table {
+    grid-column: 3 span;
+    width: 100%;
+    height: 50vh;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.book-table th,
+.book-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.book-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+.book-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.book-table tr:hover {
+    background-color: #f1f1f1;
 }
 
