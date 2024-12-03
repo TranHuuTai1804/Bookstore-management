@@ -61,12 +61,58 @@ function display(result) {
 }
 
 // Hàm khi người dùng chọn kết quả tìm kiếm
-function selectInput(list) {
+async function selectInput(list) {
+  // Cập nhật giá trị ô input với tên sách được chọn
   searchInput.value = list.innerHTML;
   resultIp.innerHTML = ""; // Xóa kết quả sau khi chọn
+
+  try {
+    // Gọi API để lấy danh sách sách
+    const response = await fetch("/api/books");
+    if (!response.ok) {
+      throw new Error("Failed to fetch books");
+    }
+    const books = await response.json();
+
+    // Tìm cuốn sách có tên khớp với tên được chọn
+    const selectedBook = books.find((book) => book.Ten_sach === list.innerHTML);
+
+    if (selectedBook) {
+      // Hiển thị thông tin chi tiết sách trong khối
+      const bookContainer = document.querySelector(".book-container");
+      bookContainer.innerHTML = ""; // Xóa nội dung cũ nếu có
+
+      const bookDetail = document.createElement("div");
+      bookDetail.className = "book-detail";
+      bookDetail.innerHTML = `
+        <div class="book-image-container">
+          <img src="${selectedBook.img || "/book/book1.png"}" alt="${
+        selectedBook.Ten_sach
+      }" class="book-image">
+        </div>
+        <div class="book-info">
+          <h2 class="book-title">${selectedBook.Ten_sach}</h2>
+          <p class="book-category">Thể loại: ${selectedBook.The_loai}</p>
+          <p class="book-author">Tác giả: ${selectedBook.Ten_tac_gia}</p>
+          <p class="book-price">Giá: $${selectedBook.Gia}</p>
+          <div class="progress-container">
+            <span class="progress-text">${selectedBook.So_luong}/30</span>
+            <div class="progress-bar" style="width: ${
+              (selectedBook.So_luong / 30) * 100
+            }%;"></div>
+          </div>
+        </div>
+      `;
+      bookContainer.appendChild(bookDetail);
+    } else {
+      console.error("Không tìm thấy thông tin sách.");
+    }
+  } catch (error) {
+    console.error("Error fetching book details:", error);
+  }
 }
 
-// Hàm hiển thị danh sách mặc định
+// Hàm hiển thị danh sách mặc định (tất cả các loại sách)
 async function showDefaultList(button = null) {
   try {
     // Gọi API để lấy tất cả sách
@@ -84,27 +130,66 @@ async function showDefaultList(button = null) {
       const bookItem = document.createElement("div");
       bookItem.className = "book-item";
       bookItem.innerHTML = `
-                    <img src="${book.img || "/book/book1.png"}" alt="${
-        book.title
+        <img src="${book.img || "/book/book1.png"}" alt="${
+        book.Ten_sach
       }" class="book-image">
-                    <h3 class="book-title">${book.Ten_sach}</h3>
-                    <p class="book-price">$${book.Gia}</p>
-                    <div class="progress-container">
-                        <span class="progress-text">${book.So_luong}/30</span>
-                        <div class="progress-bar" style="width: ${
-                          (book.So_luong / 30) * 100
-                        }%;"></div>
-                    </div>
-                `;
+        <h3 class="book-title">${book.Ten_sach}</h3>
+        <p class="book-price">$${book.Gia}</p>
+        <div class="progress-container">
+            <span class="progress-text">${book.So_luong}/30</span>
+            <div class="progress-bar" style="width: ${
+              (book.So_luong / 30) * 100
+            }%;"></div>
+        </div>
+      `;
+
+      // Thêm sự kiện click để hiển thị chi tiết sách khi người dùng click vào sách
+      bookItem.addEventListener("click", () => selectBook(book));
+
       bookContainer.appendChild(bookItem);
     });
 
-    // Cập nhật nút active
+    // Cập nhật nút active (nếu có)
     updateActiveButton(button);
   } catch (error) {
     console.error("Error fetching books:", error);
   }
 }
+
+// Hàm khi người dùng chọn sách từ danh sách (tương tự như lúc tìm kiếm)
+async function selectBook(book) {
+  const bookContainer = document.querySelector(".book-container");
+  bookContainer.innerHTML = ""; // Xóa nội dung cũ nếu có
+
+  const bookDetail = document.createElement("div");
+  bookDetail.className = "book-detail";
+  bookDetail.innerHTML = `
+    <div class="book-image-container">
+      <img src="${book.img || "/book/book1.png"}" alt="${
+    book.Ten_sach
+  }" class="book-image">
+    </div>
+    <div class="book-info">
+      <h2 class="book-title">${book.Ten_sach}</h2>
+      <p class="book-category">Thể loại: ${book.The_loai}</p>
+      <p class="book-author">Tác giả: ${book.Ten_tac_gia}</p>
+      <p class="book-price">Giá: $${book.Gia}</p>
+      <div class="progress-container">
+        <span class="progress-text">${book.So_luong}/30</span>
+        <div class="progress-bar" style="width: ${
+          (book.So_luong / 30) * 100
+        }%;"></div>
+      </div>
+    </div>
+  `;
+
+  bookContainer.appendChild(bookDetail);
+}
+
+// Khi trang được tải, hiển thị danh sách mặc định
+document.addEventListener("DOMContentLoaded", () => {
+  showDefaultList(); // Hiển thị tất cả các sách ngay khi trang tải
+});
 
 // Hàm hiển thị danh sách sách theo thể loại
 async function filterByCategory(category, button) {
