@@ -67,32 +67,11 @@ app.post("/login", (req, res) => {
 
       // So sánh mật khẩu
       if (bcrypt.compareSync(password, user.password)) {
-        // Ghi lại lịch sử đăng nhập thành công
-        connection.query(
-          "INSERT INTO login_attempts (user_id, success) VALUES (?, true)",
-          [user.id],
-          (err) => {
-            if (err) {
-              console.error("Lỗi ghi lịch sử đăng nhập:", err);
-            }
-          }
-        );
-
         return res.redirect("/home"); // Chuyển đến trang home.html
       } else {
-        // Ghi lại lịch sử đăng nhập thất bại
-        connection.query(
-          "INSERT INTO login_attempts (user_id, success) VALUES (?, false)",
-          [user.id],
-          (err) => {
-            if (err) {
-              console.error("Lỗi ghi lịch sử đăng nhập:", err);
-            }
-          }
-        );
-
         return res.status(401).send("Mật khẩu không chính xác.");
       }
+
     }
   );
 });
