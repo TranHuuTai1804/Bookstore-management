@@ -80,29 +80,45 @@ function addRow() {
 function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
+  let hasEmptyField = false;
 
   rows.forEach((row) => {
     const cells = row.querySelectorAll("input");
     const bookData = {
-      no: cells[0].value,
-      name: cells[1].value,
-      category: cells[2].value,
-      quantity: cells[3].value,
-      price: cells[4].value,
+      no: cells[0].value.trim(),
+      name: cells[1].value.trim(),
+      category: cells[2].value.trim(),
+      quantity: cells[3].value.trim(),
+      price: cells[4].value.trim(),
     };
+
+    // Kiểm tra nếu bất kỳ trường nào bị bỏ trống
+    if (
+      !bookData.no ||
+      !bookData.name ||
+      !bookData.category ||
+      !bookData.quantity ||
+      !bookData.price
+    ) {
+      hasEmptyField = true;
+    }
+
     books.push(bookData);
   });
 
-  // Gửi dữ liệu đến API hoặc xử lý tiếp theo
-  console.log(books);
+  if (hasEmptyField) {
+    showToast("error");
+    return;
+  }
 
-  // Hiển thị toast thông báo
-  showToast();
+  console.log("Books data:", books);
+
+  showToast("success");
 
   // Làm mới bảng sau khi nhấn Done
   document.getElementById("table-body").innerHTML = `
          <tr>
-             <td><input type="text" name="no1" placeholder="1"></td>
+             <td><input type="text" name="no1" placeholder="No."></td>
              <td><input type="text" name="book1" placeholder="Book Name"></td>
              <td><input type="text" name="category1" placeholder="Category"></td>
              <td><input type="number" name="quantity1" placeholder="Quantity"></td>
@@ -111,12 +127,16 @@ function submitBooks() {
      `;
 }
 
-// Hàm hiển thị toast
-function showToast() {
-  const toast = document.getElementById("toast");
+// Hiển thị toast
+function showToast(type) {
+  // Lấy phần tử toast tương ứng
+  const toast =
+    type === "success"
+      ? document.getElementById("toastSuccess")
+      : document.getElementById("toastError");
+
   toast.classList.add("show");
 
-  // Ẩn toast sau 3 giây
   setTimeout(() => {
     toast.classList.remove("show");
   }, 3000);

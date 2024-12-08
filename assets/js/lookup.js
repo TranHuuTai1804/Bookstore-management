@@ -1,3 +1,8 @@
+// Khi trang được tải, hiển thị danh sách mặc định
+document.addEventListener("DOMContentLoaded", () => {
+  showDefaultList(document.getElementById("allBtn"));
+});
+
 // Khởi tạo mảng chứa tên sách
 let bookTitles = [];
 
@@ -268,11 +273,6 @@ function updateActiveButton(button) {
     button.classList.add("active");
   }
 }
-
-// Khi trang được tải, hiển thị danh sách mặc định
-document.addEventListener("DOMContentLoaded", () => {
-  showDefaultList(document.getElementById("allBtn"));
-});
 
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");

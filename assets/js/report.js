@@ -130,42 +130,75 @@ function submitBooks() {
     // Xử lý dữ liệu cho bảng enventory
     const rows = document.querySelectorAll("#table-body tr");
     const books = [];
+    let hasEmptyField = false;
 
     rows.forEach((row) => {
       const cells = row.querySelectorAll("input");
       const bookData = {
-        no: cells[0].value,
-        bookName: cells[1].value,
-        firstExistence: cells[2].value,
-        arise: cells[3].value,
-        lastExistence: cells[4].value,
+        no: cells[0].value.trim(),
+        bookName: cells[1].value.trim(),
+        firstExistence: cells[2].value.trim(),
+        arise: cells[3].value.trim(),
+        lastExistence: cells[4].value.trim(),
       };
+
+      if (
+        !bookData.no ||
+        !bookData.bookName ||
+        !bookData.firstExistence ||
+        !bookData.arise ||
+        !bookData.lastExistence
+      ) {
+        hasEmptyField = true;
+      }
       books.push(bookData);
     });
 
+    if (hasEmptyField) {
+      showToast("error");
+      return;
+    }
+
     console.log("Enventory Report:", books);
+
+    showToast("success");
   } else if (debtTable.style.display === "block") {
     // Xử lý dữ liệu cho bảng debt
     const rows = document.querySelectorAll("#table-body-debt tr");
     const debts = [];
+    let hasEmptyField = false;
 
     rows.forEach((row) => {
       const cells = row.querySelectorAll("input");
       const debtData = {
-        no: cells[0].value,
-        guestName: cells[1].value,
-        firstDebt: cells[2].value,
-        arise: cells[3].value,
-        lastDebt: cells[4].value,
+        no: cells[0].value.trim(),
+        guestName: cells[1].value.trim(),
+        firstDebt: cells[2].value.trim(),
+        arise: cells[3].value.trim(),
+        lastDebt: cells[4].value.trim(),
       };
+
+      if (
+        !debtData.no ||
+        !debtData.guestName ||
+        !debtData.firstDebt ||
+        !debtData.arise ||
+        !debtData.lastDebt
+      ) {
+        hasEmptyField = true;
+      }
       debts.push(debtData);
     });
 
-    console.log("Debt Report:", debts);
-  }
+    if (hasEmptyField) {
+      showToast("error");
+      return;
+    }
 
-  // Hiển thị toast thông báo
-  showToast();
+    console.log("Debt Report:", debts);
+
+    showToast("success");
+  }
 
   // Làm mới bảng sau khi nhấn Done (áp dụng cho cả hai bảng)
   if (enventoryTable.style.display === "block") {
@@ -191,12 +224,16 @@ function submitBooks() {
   }
 }
 
-// Hàm hiển thị toast
-function showToast() {
-  const toast = document.getElementById("toast");
+// Hiển thị toast
+function showToast(type) {
+  // Lấy phần tử toast tương ứng
+  const toast =
+    type === "success"
+      ? document.getElementById("toastSuccess")
+      : document.getElementById("toastError");
+
   toast.classList.add("show");
 
-  // Ẩn toast sau 3 giây
   setTimeout(() => {
     toast.classList.remove("show");
   }, 3000);

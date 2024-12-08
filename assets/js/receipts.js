@@ -61,28 +61,41 @@ dateInput.addEventListener("focus", function () {
   dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
 });
 
-// Hàm xử lý khi nhấn Done
 function submitReceipts() {
   const form = document.getElementById("receipt-form");
   const formData = new FormData(form);
 
   const receiptData = {};
+  let hasEmptyField = false; // Kiểm tra nếu có trường bị bỏ trống
+
+  // Duyệt qua các trường trong form
   formData.forEach((value, key) => {
-    receiptData[key] = value;
+    receiptData[key] = value.trim(); // Loại bỏ khoảng trắng
+    if (!value.trim()) {
+      hasEmptyField = true;
+    }
   });
+
+  if (hasEmptyField) {
+    showToast("error");
+    return;
+  }
 
   console.log("Form data:", receiptData);
 
-  // Reset form
   form.reset();
 
-  // Hiển thị toast thông báo
-  showToast();
+  showToast("success");
 }
 
 // Hiển thị toast
-function showToast() {
-  const toast = document.getElementById("toast");
+function showToast(type) {
+  // Lấy phần tử toast tương ứng
+  const toast =
+    type === "success"
+      ? document.getElementById("toastSuccess")
+      : document.getElementById("toastError");
+
   toast.classList.add("show");
 
   setTimeout(() => {

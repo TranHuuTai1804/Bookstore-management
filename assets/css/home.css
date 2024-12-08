@@ -1622,22 +1622,29 @@ input[type="text"].search-input {
 
 /* toast */
 /* Style cho toast */
-.toast {
+.toast, .toastError {
     position: fixed;
     top: 20px;
     right: 20px;
-    background-color: #28a745;
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
     font-size: 16px;
     opacity: 0;
-    transition: opacity 0.5s ease;
     visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
     z-index: 10001;
 }
 
-.toast.show {
+.toast.show, .toastError.show {
     opacity: 1;
     visibility: visible;
+}
+
+.toast {
+    background-color: #28a745; 
+}
+
+.toastError {
+    background-color: #e33a3a; 
 }

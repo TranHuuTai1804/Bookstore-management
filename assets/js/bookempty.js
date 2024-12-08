@@ -1,3 +1,23 @@
+// Lấy thẻ input ngày
+const dateInput = document.getElementById("date-receipt");
+
+// Hàm để lấy ngày hiện tại theo định dạng YYYY-MM-DD
+function getCurrentDate() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Gán ngày hiện tại vào thẻ input khi trang được tải lên
+dateInput.value = getCurrentDate();
+
+// Cập nhật ngày khi người dùng nhấp vào thẻ input
+dateInput.addEventListener("focus", function () {
+  dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
+});
+
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");
   const overlay = document.getElementById("overlay");
@@ -60,29 +80,43 @@ function addRow() {
 function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
+  let hasEmptyField = false;
 
   rows.forEach((row) => {
     const cells = row.querySelectorAll("input");
     const bookData = {
-      no: cells[0].value,
-      name: cells[1].value,
-      category: cells[2].value,
-      author: cells[3].value,
-      quantity: cells[4].value,
+      no: cells[0].value.trim(),
+      name: cells[1].value.trim(),
+      category: cells[2].value.trim(),
+      author: cells[3].value.trim(),
+      quantity: cells[4].value.trim(),
     };
+
+    if (
+      !bookData.no ||
+      !bookData.name ||
+      !bookData.category ||
+      !bookData.author ||
+      !bookData.quantity
+    ) {
+      hasEmptyField = true;
+    }
     books.push(bookData);
   });
 
-  // Gửi dữ liệu đến API hoặc xử lý tiếp theo
-  console.log(books);
+  if (hasEmptyField) {
+    showToast("error");
+    return;
+  }
 
-  // Hiển thị toast thông báo
-  showToast();
+  console.log("Books data:", books);
+
+  showToast("success");
 
   // Làm mới bảng sau khi nhấn Done
   document.getElementById("table-body").innerHTML = `
         <tr>
-            <td><input type="text" name="no1" placeholder="1"></td>
+            <td><input type="text" name="no1" placeholder="No."></td>
             <td><input type="text" name="book1" placeholder="Book Name"></td>
             <td><input type="text" name="category1" placeholder="Category"></td>
             <td><input type="text" name="author1" placeholder="Author"></td>
@@ -90,12 +124,16 @@ function submitBooks() {
         </tr>
     `;
 }
-// Hàm hiển thị toast
-function showToast() {
-  const toast = document.getElementById("toast");
+// Hiển thị toast
+function showToast(type) {
+  // Lấy phần tử toast tương ứng
+  const toast =
+    type === "success"
+      ? document.getElementById("toastSuccess")
+      : document.getElementById("toastError");
+
   toast.classList.add("show");
 
-  // Ẩn toast sau 3 giây
   setTimeout(() => {
     toast.classList.remove("show");
   }, 3000);

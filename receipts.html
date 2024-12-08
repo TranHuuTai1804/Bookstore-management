@@ -36,22 +36,22 @@
         <form id="receipt-form">
             <div class="form-group">
                 <label for="customer">Customer:</label>
-                <input type="text" id="customer" name="customer" placeholder="Enter customer name">
+                <input type="text" id="customer" name="customer" placeholder="Enter customer name" required>
             </div>
 
             <div class="form-group">
                 <label for="phone">Phone number:</label>
-                <input type="text" id="phone" name="phone" placeholder="Enter phone number">
+                <input type="text" id="phone" name="phone" placeholder="Enter phone number" required>
             </div>
 
             <div class="form-group">
                 <label for="address">Address:</label>
-                <input type="text" id="address" name="address" placeholder="Enter address">
+                <input type="text" id="address" name="address" placeholder="Enter address" required>
             </div>
 
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" placeholder="Enter email">
+                <input type="email" id="email" name="email" placeholder="Enter email" required>
             </div>
 
             <div class="form-group">
@@ -64,7 +64,7 @@
 
             <div class="form-group">
                 <label for="price">Price:</label>
-                <input type="text" id="price" name="price" placeholder="Enter price">
+                <input type="text" id="price" name="price" placeholder="Enter price" required>
             </div>
 
         </form>
@@ -87,7 +87,10 @@
     </div>
 
     <!-- Toast thông báo -->
-    <div id="toast" class="toast">Books added successfully!</div>
+    <div id="toastSuccess" class="toast">Lập biên lai thành công !!!</div>
+    <div id="toastError" class="toastError">Lập biên lai thất bại! , còn mục chưa nhập.</div>
+
+
 </body>
 
 <script src="/js/receipts.js"></script>

@@ -67,7 +67,6 @@ CREATE TABLE Chi_tiet_hoa_don (
     ID_Sach INT,
     So_luong INT,
     Don_gia DECIMAL(10, 2),
-    Thanh_tien DECIMAL(10, 2),
     FOREIGN KEY (ID_Hoa_don) REFERENCES Hoa_don_ban_sach(ID_Hoa_don),
     FOREIGN KEY (ID_Sach) REFERENCES Sach(ID_sach)
 );
