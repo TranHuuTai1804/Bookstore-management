@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import bodyParser from "body-parser";
 import mysql from "mysql2";
 import bcrypt from "bcrypt";
+import { error } from "console";
 
 const port = 3000;
 const app = express();
@@ -123,6 +124,17 @@ app.get("/api/books", (req, res) => {
   connection.query(sql, (err, results) => {
     if (err) {
       res.status(500).json({ error: err.message });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+app.get("/profile", (req, res) => {
+  const sql = "SELECT * FROM Khach_hang";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: error.message });
     } else {
       res.json(results);
     }

@@ -64,10 +64,13 @@
                 <!-- Dòng 1, nhập liệu -->
                 <tr>
                     <td><input type="text" name="no1" placeholder="No."></td>
-                    <td><input type="text" name="book1" placeholder="Book Name"></td>
-                    <td><input type="text" name="category1" placeholder="Category"></td>
-                    <td><input type="number" name="quantity1" placeholder="Quantity"></td>
-                    <td><input type="text" name="price1" placeholder="Price"></td>
+                    <td>
+                        <input name="book1" type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
+                        <div class="autocomplete-suggestions" style="display: none;"></div>
+                    </td>
+                    <td><input type="text" name="category1" placeholder="Category" id="categoryInput"></td>
+                    <td><input type="number" name="quantity1" placeholder="Quantity" oninput="calculatePrice(this)"></td>
+                    <td><input type="text" name="price1" placeholder="Price" id="priceInput"></td>
                 </tr>
             </tbody>
         </table>

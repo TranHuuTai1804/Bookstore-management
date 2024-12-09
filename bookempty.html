@@ -45,23 +45,25 @@
         <table class="table-container">
             <thead>
                 <tr>
-                    <th>No.</th>
-                    <th>Book</th>
-                    <th>Category</th>
-                    <th>Author</th>
-                    <th>Quantity</th>
+                  <th>No.</th>
+                  <th>Book</th>
+                  <th>Category</th>
+                  <th>Author</th>
+                  <th>Quantity</th>
                 </tr>
-            </thead>
-            <tbody id="table-body">
-                <!-- Dòng 1, nhập liệu -->
+              </thead>
+              <tbody id="table-body">
                 <tr>
-                    <td><input type="text" name="no1" placeholder="No."></td>
-                    <td><input type="text" name="book1" placeholder="Book Name"></td>
-                    <td><input type="text" name="category1" placeholder="Category"></td>
-                    <td><input type="text" name="author1" placeholder="Author"></td>
-                    <td><input type="number" name="quantity1" placeholder="Quantity"></td>
+                  <td><input type="text" placeholder="No." class="book-no"></td>
+                  <td>
+                    <input type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
+                    <div class="autocomplete-suggestions" style="display: none;"></div>
+                  </td>
+                  <td><input type="text" placeholder="Category" class="book-category" id="categoryInput" ></td>
+                  <td><input type="text" placeholder="Author" class="book-author" id="authorInput" ></td>
+                  <td><input type="number" placeholder="Quantity" class="book-quantity"></td>
                 </tr>
-            </tbody>
+              </tbody>
         </table>
         <button class="add-row-btn" onclick="addRow()">+</button>
     </div>

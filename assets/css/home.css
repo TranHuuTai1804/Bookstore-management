@@ -1617,8 +1617,6 @@ input[type="text"].search-input {
     font-size: 1.3rem;
     margin-bottom: 8px;
   }
-  
-  
 
 /* toast */
 /* Style cho toast */
@@ -1648,3 +1646,24 @@ input[type="text"].search-input {
 .toastError {
     background-color: #e33a3a; 
 }
+
+/* Gợi ý trong bảng nhập sách */
+.autocomplete-suggestions {
+    position: absolute;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 10;
+    width: 18%;
+}
+  
+.autocomplete-suggestions div {
+    padding: 8px;
+    cursor: pointer;
+}
+  
+.autocomplete-suggestions div:hover {
+    background-color: #f0f0f0;
+}
+  

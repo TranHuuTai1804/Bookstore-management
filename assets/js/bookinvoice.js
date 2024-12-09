@@ -1,3 +1,123 @@
+let booksList = [];
+
+// Hàm lấy danh sách sách từ API và cập nhật mảng booksList
+async function fetchBookTitles() {
+  try {
+    const response = await fetch("/api/books");
+    if (!response.ok) {
+      throw new Error("Failed to fetch books");
+    }
+    const books = await response.json();
+
+    // Cập nhật mảng booksList với tên sách, thể loại, tác giả và giá
+    booksList = books.map((book) => ({
+      Ten_sach: book.Ten_sach,
+      The_loai: book.The_loai,
+      Gia: book.Gia,
+    }));
+
+    // Đảm bảo rằng kết quả được hiển thị sau khi dữ liệu đã được lấy
+    console.log("Danh sách sách hiện tại:", booksList);
+  } catch (error) {
+    console.error("Error fetching books:", error);
+  }
+}
+
+// Gọi hàm fetchBookTitles và đảm bảo rằng dữ liệu được tải xong trước khi cho phép tìm kiếm
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchBookTitles(); // Đảm bảo dữ liệu đã được tải về
+});
+
+// Hàm để hiển thị các gợi ý
+function showSuggestions(inputElement) {
+  const suggestionsBox = inputElement.nextElementSibling; // Lấy thẻ div chứa gợi ý
+  const searchTerm = inputElement.value.trim().toLowerCase();
+
+  // Nếu không có gì để tìm, ẩn gợi ý
+  if (!searchTerm) {
+    suggestionsBox.style.display = "none";
+    return;
+  }
+
+  // Lọc danh sách sách dựa trên từ khóa người dùng nhập (so sánh tên sách)
+  const filteredBooks = booksList.filter(
+    (book) => book.Ten_sach.toLowerCase().includes(searchTerm) // Tìm theo tên sách
+  );
+
+  // Nếu không tìm thấy gợi ý nào, ẩn gợi ý
+  if (filteredBooks.length === 0) {
+    suggestionsBox.style.display = "none";
+    return;
+  }
+
+  // Hiển thị các gợi ý
+  suggestionsBox.innerHTML = filteredBooks
+    .map(
+      (book) =>
+        `<div onclick="selectSuggestion('${book.Ten_sach}', '${inputElement.id}')">${book.Ten_sach}</div>` // Hiển thị tên sách
+    )
+    .join("");
+  suggestionsBox.style.display = "block";
+}
+
+// Hàm khi người dùng chọn một gợi ý
+function selectSuggestion(book, inputId) {
+  const inputElement = document.getElementById(inputId);
+  inputElement.value = book; // Gán giá trị gợi ý vào ô input
+  inputElement.nextElementSibling.style.display = "none"; // Ẩn gợi ý
+
+  // Tìm sách trong danh sách để lấy thông tin Thể loại, Tác giả và Giá
+  const selectedBook = booksList.find((b) => b.Ten_sach === book);
+
+  if (selectedBook) {
+    // Tự động điền Thể loại, Tác giả và Giá vào các ô input tương ứng
+    document.getElementById("categoryInput").value = selectedBook.The_loai;
+    document.getElementById("priceInput").value = selectedBook.Gia;
+  }
+}
+
+// Hàm tính toán giá khi người dùng nhập số lượng
+function calculatePrice(inputElement) {
+  const quantity = parseInt(inputElement.value); // Lấy giá trị số lượng
+  const priceInput = inputElement
+    .closest("tr")
+    .querySelector("input[name='price1']"); // Lấy ô giá
+  const bookName = inputElement
+    .closest("tr")
+    .querySelector("input[name='book1']").value; // Lấy tên sách
+
+  // Tìm sách tương ứng với tên sách
+  const selectedBook = booksList.find((b) => b.Ten_sach === bookName);
+
+  if (selectedBook && quantity > 0) {
+    const totalPrice = selectedBook.Gia * quantity; // Tính giá tổng
+    priceInput.value = totalPrice; // Cập nhật ô giá
+  } else {
+    priceInput.value = ""; // Nếu không có sách hoặc số lượng không hợp lệ, xóa giá
+  }
+}
+
+// Gắn sự kiện 'oninput' vào ô số lượng
+document.querySelectorAll("input[name='quantity1']").forEach((inputElement) => {
+  inputElement.addEventListener("input", function () {
+    calculatePrice(inputElement); // Gọi hàm tính giá khi số lượng thay đổi
+  });
+});
+
+// Ẩn gợi ý khi người dùng nhấp bên ngoài
+document.addEventListener("click", function (e) {
+  if (
+    !e.target.matches(".book-name") &&
+    !e.target.matches(".autocomplete-suggestions div")
+  ) {
+    document
+      .querySelectorAll(".autocomplete-suggestions")
+      .forEach((suggestion) => {
+        suggestion.style.display = "none";
+      });
+  }
+});
+
 // Lấy thẻ input ngày
 const dateInput = document.getElementById("date-receipt");
 
