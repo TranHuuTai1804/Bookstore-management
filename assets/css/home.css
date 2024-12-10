@@ -316,6 +316,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
 }
 
 
@@ -434,6 +435,10 @@ input[type="text"], input[type="number"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.form-group.name {
+    position: relative;
 }
 
 label {
@@ -1647,6 +1652,10 @@ input[type="text"].search-input {
     background-color: #e33a3a; 
 }
 
+.nameBook {
+    position: relative;
+}
+
 /* Gợi ý trong bảng nhập sách */
 .autocomplete-suggestions {
     position: absolute;
@@ -1655,15 +1664,72 @@ input[type="text"].search-input {
     max-height: 150px;
     overflow-y: auto;
     z-index: 10;
-    width: 18%;
+    width: 100%; 
+    top: calc(100% + 4px); 
+    left: 0; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    border-radius: 4px; 
 }
   
+
 .autocomplete-suggestions div {
-    padding: 8px;
+    padding: 8px 12px; 
     cursor: pointer;
+    font-size: 14px; 
 }
   
 .autocomplete-suggestions div:hover {
-    background-color: #f0f0f0;
+    background-color: #e6f7ff; 
+    color: #007bff;
 }
-  
+
+.nameCustomer {
+    position: absolute;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 10;
+    width: 100%; 
+    top: calc(100% + 4px); 
+    left: 0; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    border-radius: 4px; 
+}
+
+.nameCustomer div {
+    padding: 8px 12px; 
+    cursor: pointer;
+    font-size: 14px; 
+}
+
+.nameCustomer div:hover {
+    background-color: #e6f7ff; 
+    color: #007bff; 
+}
+
+/* Gợi ý trong page Receipt */ 
+.customerSuggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 10;
+    width: 100%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.customerSuggestions div {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.customerSuggestions div:hover {
+    background-color: #e6f7ff;
+    color: #007bff;
+}

@@ -1,120 +1,104 @@
+let customers = [];
 let booksList = [];
 
-// Hàm lấy danh sách sách từ API và cập nhật mảng booksList
-async function fetchBookTitles() {
+// Fetch dữ liệu từ API
+async function fetchData(api, dataArray, mapFn) {
   try {
-    const response = await fetch("/api/books");
+    const response = await fetch(api);
     if (!response.ok) {
-      throw new Error("Failed to fetch books");
+      throw new Error(`Failed to fetch from ${api}`);
     }
-    const books = await response.json();
-
-    // Cập nhật mảng booksList với tên sách, thể loại, tác giả và giá
-    booksList = books.map((book) => ({
-      Ten_sach: book.Ten_sach,
-      The_loai: book.The_loai,
-      Gia: book.Gia,
-    }));
-
-    // Đảm bảo rằng kết quả được hiển thị sau khi dữ liệu đã được lấy
-    console.log("Danh sách sách hiện tại:", booksList);
+    const data = await response.json();
+    // Cập nhật mảng dữ liệu
+    dataArray.push(...data.map(mapFn));
+    console.log(`${api} data loaded:`, dataArray);
   } catch (error) {
-    console.error("Error fetching books:", error);
+    console.error(`Error fetching from ${api}:`, error);
   }
 }
 
-// Gọi hàm fetchBookTitles và đảm bảo rằng dữ liệu được tải xong trước khi cho phép tìm kiếm
-document.addEventListener("DOMContentLoaded", async () => {
-  await fetchBookTitles(); // Đảm bảo dữ liệu đã được tải về
-});
-
-// Hàm để hiển thị các gợi ý
-function showSuggestions(inputElement) {
-  const suggestionsBox = inputElement.nextElementSibling; // Lấy thẻ div chứa gợi ý
+// Hiển thị gợi ý
+function showSuggestions(inputElement, dataList, mapKey) {
+  const suggestionsBox = inputElement.nextElementSibling; // Div chứa gợi ý
   const searchTerm = inputElement.value.trim().toLowerCase();
 
-  // Nếu không có gì để tìm, ẩn gợi ý
   if (!searchTerm) {
     suggestionsBox.style.display = "none";
     return;
   }
 
-  // Lọc danh sách sách dựa trên từ khóa người dùng nhập (so sánh tên sách)
-  const filteredBooks = booksList.filter(
-    (book) => book.Ten_sach.toLowerCase().includes(searchTerm) // Tìm theo tên sách
+  const filteredItems = dataList.filter((item) =>
+    item[mapKey].toLowerCase().includes(searchTerm)
   );
 
-  // Nếu không tìm thấy gợi ý nào, ẩn gợi ý
-  if (filteredBooks.length === 0) {
+  if (filteredItems.length === 0) {
     suggestionsBox.style.display = "none";
     return;
   }
 
-  // Hiển thị các gợi ý
-  suggestionsBox.innerHTML = filteredBooks
+  suggestionsBox.innerHTML = filteredItems
     .map(
-      (book) =>
-        `<div onclick="selectSuggestion('${book.Ten_sach}', '${inputElement.id}')">${book.Ten_sach}</div>` // Hiển thị tên sách
+      (item) =>
+        `<div onclick="selectSuggestion('${item[mapKey]}', '${inputElement.id}')">${item[mapKey]}</div>`
     )
     .join("");
   suggestionsBox.style.display = "block";
 }
 
-// Hàm khi người dùng chọn một gợi ý
-function selectSuggestion(book, inputId) {
+// Khi chọn một gợi ý
+function selectSuggestion(value, inputId) {
   const inputElement = document.getElementById(inputId);
-  inputElement.value = book; // Gán giá trị gợi ý vào ô input
-  inputElement.nextElementSibling.style.display = "none"; // Ẩn gợi ý
+  inputElement.value = value;
+  inputElement.nextElementSibling.style.display = "none";
 
-  // Tìm sách trong danh sách để lấy thông tin Thể loại, Tác giả và Giá
-  const selectedBook = booksList.find((b) => b.Ten_sach === book);
-
-  if (selectedBook) {
-    // Tự động điền Thể loại, Tác giả và Giá vào các ô input tương ứng
-    document.getElementById("categoryInput").value = selectedBook.The_loai;
-    document.getElementById("priceInput").value = selectedBook.Gia;
+  if (inputId === "book-name") {
+    const selectedBook = booksList.find((book) => book.Ten_sach === value);
+    if (selectedBook) {
+      document.getElementById("categoryInput").value = selectedBook.The_loai;
+      document.getElementById("priceInput").value = selectedBook.Gia;
+    }
   }
 }
 
-// Hàm tính toán giá khi người dùng nhập số lượng
+// Tính toán giá dựa trên số lượng
 function calculatePrice(inputElement) {
-  const quantity = parseInt(inputElement.value); // Lấy giá trị số lượng
-  const priceInput = inputElement
-    .closest("tr")
-    .querySelector("input[name='price1']"); // Lấy ô giá
-  const bookName = inputElement
-    .closest("tr")
-    .querySelector("input[name='book1']").value; // Lấy tên sách
+  const quantity = parseInt(inputElement.value);
+  const row = inputElement.closest("tr");
+  const priceInput = row.querySelector("input[name='price1']");
+  const bookName = row.querySelector("input[name='book1']").value;
 
-  // Tìm sách tương ứng với tên sách
-  const selectedBook = booksList.find((b) => b.Ten_sach === bookName);
-
-  if (selectedBook && quantity > 0) {
-    const totalPrice = selectedBook.Gia * quantity; // Tính giá tổng
-    priceInput.value = totalPrice; // Cập nhật ô giá
-  } else {
-    priceInput.value = ""; // Nếu không có sách hoặc số lượng không hợp lệ, xóa giá
-  }
+  const selectedBook = booksList.find((book) => book.Ten_sach === bookName);
+  priceInput.value =
+    selectedBook && quantity > 0 ? selectedBook.Gia * quantity : "";
 }
 
-// Gắn sự kiện 'oninput' vào ô số lượng
-document.querySelectorAll("input[name='quantity1']").forEach((inputElement) => {
-  inputElement.addEventListener("input", function () {
-    calculatePrice(inputElement); // Gọi hàm tính giá khi số lượng thay đổi
-  });
+// Gọi API khi tải trang
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchData("/profile", customers, (c) => ({
+    Ten_khach_hang: c.Ten_khach_hang,
+  }));
+  await fetchData("/api/books", booksList, (b) => ({
+    Ten_sach: b.Ten_sach,
+    The_loai: b.The_loai,
+    Gia: b.Gia,
+  }));
 });
 
-// Ẩn gợi ý khi người dùng nhấp bên ngoài
-document.addEventListener("click", function (e) {
-  if (
-    !e.target.matches(".book-name") &&
-    !e.target.matches(".autocomplete-suggestions div")
-  ) {
-    document
-      .querySelectorAll(".autocomplete-suggestions")
-      .forEach((suggestion) => {
-        suggestion.style.display = "none";
-      });
+// Sự kiện input để hiển thị gợi ý
+document.addEventListener("input", (e) => {
+  if (e.target.matches("#customer-name")) {
+    showSuggestions(e.target, customers, "Ten_khach_hang");
+  } else if (e.target.matches(".book-name")) {
+    showSuggestions(e.target, booksList, "Ten_sach");
+  }
+});
+
+// Sự kiện để ẩn gợi ý khi click bên ngoài
+document.addEventListener("click", (e) => {
+  if (!e.target.matches(".autocomplete-suggestions div, input")) {
+    document.querySelectorAll(".autocomplete-suggestions").forEach((box) => {
+      box.style.display = "none";
+    });
   }
 });
 

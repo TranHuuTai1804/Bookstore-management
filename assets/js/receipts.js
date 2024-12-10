@@ -1,3 +1,80 @@
+let customers = [];
+
+// Hàm fetch danh sách khách hàng
+async function fetchCustomers() {
+  try {
+    const response = await fetch("/profile");
+    if (!response.ok) {
+      throw new Error("Failed to fetch customers");
+    }
+    const data = await response.json();
+    customers = data.map((customer) => ({
+      name: customer.Ten_khach_hang,
+      phone: customer.So_dien_thoai,
+      address: customer.Dia_chi,
+      email: customer.Email,
+    }));
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+  }
+}
+
+// Gọi fetch khi trang tải
+document.addEventListener("DOMContentLoaded", fetchCustomers);
+
+// Hiển thị gợi ý khách hàng
+function showCustomerSuggestions(inputElement) {
+  const suggestionsBox = document.querySelector(".customerSuggestions");
+  const searchTerm = inputElement.value.trim().toLowerCase();
+
+  if (!searchTerm) {
+    suggestionsBox.style.display = "none";
+    return;
+  }
+
+  // Lọc khách hàng phù hợp
+  const filteredCustomers = customers.filter((customer) =>
+    customer.name.toLowerCase().includes(searchTerm)
+  );
+
+  if (filteredCustomers.length === 0) {
+    suggestionsBox.style.display = "none";
+    return;
+  }
+
+  // Hiển thị gợi ý
+  suggestionsBox.innerHTML = filteredCustomers
+    .map(
+      (customer) =>
+        `<div onclick="selectCustomer('${customer.name}')">${customer.name}</div>`
+    )
+    .join("");
+  suggestionsBox.style.display = "block";
+}
+
+// Khi chọn một gợi ý hoặc nhập đúng tên khách hàng
+function selectCustomer(customerName) {
+  const customer = customers.find((c) => c.name === customerName);
+
+  if (customer) {
+    // Tự động điền thông tin khách hàng
+    document.getElementById("customer").value = customer.name;
+    document.getElementById("phone").value = customer.phone || "";
+    document.getElementById("address").value = customer.address || "";
+    document.getElementById("email").value = customer.email || "";
+  }
+
+  // Ẩn gợi ý
+  document.querySelector(".customerSuggestions").style.display = "none";
+}
+
+// Ẩn gợi ý khi click bên ngoài
+document.addEventListener("click", function (e) {
+  if (!e.target.closest(".form-group")) {
+    document.querySelector(".customerSuggestions").style.display = "none";
+  }
+});
+
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");
   const overlay = document.getElementById("overlay");

@@ -36,7 +36,8 @@
     <div class="customer-section">
         <div class="customer">
             <h3>Customer:</h3>
-            <input type="text" id="customer-name" placeholder="Customer Name">
+            <input type="text" id="customer-name" placeholder="Customer Name" oninput="showSuggestions(this)">
+            <div class="autocomplete-suggestions nameCustomer" style="display: none;"></div>
         </div>
     
         <div class="date">
@@ -64,7 +65,7 @@
                 <!-- Dòng 1, nhập liệu -->
                 <tr>
                     <td><input type="text" name="no1" placeholder="No."></td>
-                    <td>
+                    <td class="nameBook">
                         <input name="book1" type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
                         <div class="autocomplete-suggestions" style="display: none;"></div>
                     </td>
