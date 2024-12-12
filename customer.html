@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Invoice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.11.2/toastify.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.11.2/toastify.min.js"></script>
+    <link rel="stylesheet" href="/css/home.css">
+</head>
+<body>
+    <header class="header">
+        <div class="navbar">
+            <div class="navbar-left">
+                <a href="/home"><img src="/img/logo.svg" alt=""></a>
+                <ul>
+                    <li><a href="/home">Home</a></li>
+                    <li><a href="#">Customer</a></li>
+                    <li><a href="#">Staff</a></li>
+                </ul>
+            </div>
+
+            <div class="navbar-right">
+                <button class="logout"><a href="/">Log Out</a></button>
+            </div>
+        </div>
+    </header>
+
+        <!-- Block Customer Form -->
+        <div class="book-entry-form">
+            <h2>Customer</h2>
+        </div>
+
+    <!-- Customer List Section -->
+    <div class="date-section">
+        <table class="table-container">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Gender</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Existing customers will be populated here -->
+            </tbody>
+        </table>
+        <button class="add-row-btn">+</button>
+    </div>
+
+
+<!-- Form Thêm Khách Hàng -->
+<div id="addCustomerForm">
+    <h3>Thêm Khách Hàng Mới</h3>
+    <form id="customerForm" method="POST" action="/addCustomer">
+        <label for="name">Tên Khách Hàng</label>
+        <input type="text" id="name" name="name" required>
+    
+        <label for="phone">Số Điện Thoại</label>
+        <input type="text" id="phone" name="phone" required>
+    
+        <label for="address">Địa Chỉ</label>
+        <input type="text" id="address" name="address" required>
+    
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="email">Gender(M/F)</label>
+        <input type="text" id="gender" name="gender" required>
+    
+        <button type="submit">Thêm</button>
+        <button type="button" id="cancelButton">Hủy</button>
+    </form>
+</div>
+
+</body>
+<script src="/js/customer.js"></script>
+</html>

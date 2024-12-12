@@ -1733,3 +1733,91 @@ input[type="text"].search-input {
     background-color: #e6f7ff;
     color: #007bff;
 }
+
+/* Customer page */ 
+.delete-row-btn {
+    color: white;
+    background-color: #ff4d4d;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.delete-row-btn:hover {
+    background-color: #cc0000;
+}
+
+
+
+/* Form Thêm Khách Hàng */
+#addCustomerForm {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000; /* Đặt form lên trên lớp nền mờ */
+    display: none; /* Ẩn mặc định */
+}
+
+/* Các phần tử khác của form */
+#addCustomerForm h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+#customerForm label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+#customerForm input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Submit và Cancel */
+#customerForm button {
+    width: 48%;
+    padding: 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#customerForm button[type="submit"] {
+    background-color: #28a745;
+    color: white;
+}
+
+#customerForm button[type="submit"]:hover {
+    background-color: #218838;
+}
+
+#customerForm button[type="button"] {
+    background-color: #dc3545;
+    color: white;
+    float: right;
+}
+
+#customerForm button[type="button"]:hover {
+    background-color: #c82333;
+}

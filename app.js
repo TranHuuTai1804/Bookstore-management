@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "20082004",
   database: "QLNhasach",
 });
 
@@ -141,6 +141,52 @@ app.get("/profile", (req, res) => {
   });
 });
 
+app.post("/addCustomer", (req, res) => {
+  const { name, phone, address, email, gender } = req.body;
+
+  // Truy vấn để lấy ID lớn nhất hiện tại trong bảng
+  const getMaxIdQuery = "SELECT MAX(ID_khach_hang) AS max_id FROM Khach_hang";
+
+  connection.query(getMaxIdQuery, (err, result) => {
+    if (err) {
+      console.error("Error fetching max ID:", err);
+      return res.status(500).send("Server error");
+    }
+
+    // Lấy ID lớn nhất và tăng thêm 1
+    const newID = result[0].max_id ? result[0].max_id + 1 : 1; // Nếu không có ID nào, gán ID = 1
+
+    // Thêm khách hàng mới vào cơ sở dữ liệu
+    const insertCustomerQuery = `
+      INSERT INTO Khach_hang (ID_khach_hang, Ten_khach_hang, So_dien_thoai, Dia_chi, Email, Gioi_tinh)
+      VALUES (?, ?, ?, ?, ?,?)
+    `;
+
+    connection.query(
+      insertCustomerQuery,
+      [newID, name, phone, address, email, gender],
+      (err, results) => {
+        if (err) {
+          console.error("Error adding customer:", err);
+          return res.status(500).send("Server error");
+        }
+
+        // Trả về danh sách khách hàng đã cập nhật
+        connection.query(
+          "SELECT * FROM Khach_hang",
+          (err, updatedCustomers) => {
+            if (err) {
+              console.error("Error fetching updated customer data:", err);
+              return res.status(500).send("Server error");
+            }
+            res.json(updatedCustomers); // Trả về danh sách khách hàng mới
+          }
+        );
+      }
+    );
+  });
+});
+
 // Gửi file HTML trang đăng ký
 app.get("/signup", (req, res) => {
   res.sendFile(join(__dirname, "signup.html"));
@@ -169,6 +215,10 @@ app.get("/report", (req, res) => {
 
 app.get("/lookup", (req, res) => {
   res.sendFile(join(__dirname, "lookup.html"));
+});
+
+app.get("/customer", (req, res) => {
+  res.sendFile(join(__dirname, "customer.html"));
 });
 
 // Khởi động server
