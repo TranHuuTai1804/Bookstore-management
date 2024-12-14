@@ -42,32 +42,34 @@
 
     <!-- Bảng -->
     <div class="date-section">
-        <table class="table-container">
-            <thead>
-                <tr>
-                  <th>No.</th>
-                  <th>Book</th>
-                  <th>Category</th>
-                  <th>Author</th>
-                  <th>Quantity</th>
-                </tr>
-              </thead>
-              <tbody id="table-body">
-                <tr>
-                  <td><input type="text" placeholder="No." class="book-no"></td>
-                  <td class="nameBook">
-                    <input type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
-                    <div class="autocomplete-suggestions" style="display: none;"></div>
-                  </td>
-                  <td><input type="text" placeholder="Category" class="book-category" id="categoryInput" ></td>
-                  <td><input type="text" placeholder="Author" class="book-author" id="authorInput" ></td>
-                  <td><input type="number" placeholder="Quantity" class="book-quantity"></td>
-                </tr>
-              </tbody>
-        </table>
-        <button class="add-row-btn" onclick="addRow()">+</button>
+        <form method="POST" action="/addBook">
+            <table class="table-container">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Book</th>
+                        <th>Category</th>
+                        <th>Author</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td><input type="text" name="id" placeholder="ID" class="book-no" id="idInput" required></td>
+                        <td class="nameBook">
+                            <input type="text" name="name" id="nameBookInput" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+                            <div class="autocomplete-suggestions" style="display: none;"></div>
+                        </td>
+                        <td><input type="text" name="category" placeholder="Category" class="book-category" id="categoryInput" required></td>
+                        <td><input type="text" name="author" placeholder="Author" class="book-author" id="authorInput" required></td>
+                        <td><input type="number" name="quantity" placeholder="Quantity" class="book-quantity" min="1" required></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="add-row-btn" onclick="addRow()">+</button>
+            <button type="submit" class="done-btn">Done</button>
+        </form>
     </div>
-    <button class="done-btn" onclick="submitBooks()">Done</button>
 
     <button class="open-menu" onclick="toggleMenu()">></button>
 

@@ -11,9 +11,10 @@ async function fetchBookTitles() {
 
     // Cập nhật mảng booksList với tên sách, thể loại và tác giả
     booksList = books.map((book) => ({
-      Ten_sach: book.Ten_sach, // Tên sách
-      The_loai: book.The_loai, // Thể loại sách
-      Ten_tac_gia: book.Ten_tac_gia, // Tên tác giả
+      ID_sach: book.ID_sach,
+      Ten_sach: book.Ten_sach,
+      The_loai: book.The_loai,
+      Ten_tac_gia: book.Ten_tac_gia,
     }));
 
     // Đảm bảo rằng kết quả được hiển thị sau khi dữ liệu đã được lấy
@@ -71,8 +72,14 @@ function selectSuggestion(book, inputId) {
 
   if (selectedBook) {
     // Tự động điền Thể loại và Tác giả vào các ô input tương ứng
-    document.getElementById("categoryInput").value = selectedBook.The_loai;
-    document.getElementById("authorInput").value = selectedBook.Ten_tac_gia;
+    document.getElementById(
+      inputId.replace("nameBookInput", "categoryInput")
+    ).value = selectedBook.The_loai;
+    document.getElementById(inputId.replace("nameBookInput", "idInput")).value =
+      selectedBook.ID_sach;
+    document.getElementById(
+      inputId.replace("nameBookInput", "authorInput")
+    ).value = selectedBook.Ten_tac_gia;
   }
 }
 
@@ -110,6 +117,7 @@ dateInput.addEventListener("focus", function () {
   dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
 });
 
+// Hàm toggle menu
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");
   const overlay = document.getElementById("overlay");
@@ -121,54 +129,47 @@ function toggleMenu() {
     menu.style.display = "block"; // Mở menu
     setTimeout(() => {
       menu.style.left = "0"; // Đặt menu vào vị trí mong muốn với hiệu ứng trượt
-    }, 10); // Đảm bảo hiệu ứng trượt được áp dụng
-    overlay.style.display = "block"; // Hiện overlay
-    icon.textContent = "<"; // Đổi icon thành '<'
+    }, 10);
+    overlay.style.display = "block";
+    icon.textContent = "<";
 
     // Thêm lớp menu-open để di chuyển icon
     body.classList.add("menu-open");
   } else {
     menu.style.left = "-30%"; // Ẩn menu với hiệu ứng trượt
-    overlay.style.display = "none"; // Ẩn overlay
-    icon.textContent = ">"; // Đổi icon thành '>'
+    overlay.style.display = "none";
+    icon.textContent = ">";
 
     // Loại bỏ lớp menu-open để di chuyển icon về vị trí ban đầu
     body.classList.remove("menu-open");
 
     setTimeout(() => {
-      menu.style.display = "none"; // Ẩn menu sau khi trượt hoàn tất
-    }, 300); // Thời gian trượt hoàn tất trước khi ẩn menu
+      menu.style.display = "none";
+    }, 300);
   }
 }
 
-// Ẩn thanh cuộn khi người dùng lướt lên hoặc xuống
-const menuOv = document.getElementById("hero-menu");
-
-menuOv.addEventListener("scroll", function () {
-  menuOv.style.scrollbarWidth = "none"; // Ẩn thanh cuộn khi lướt
-  clearTimeout(menuOv.scrollTimeout);
-
-  menuOv.scrollTimeout = setTimeout(function () {
-    menuOv.style.scrollbarWidth = "thin"; // Hiển thị lại thanh cuộn khi ngừng lướt
-  }, 100); // Ẩn thanh cuộn khi lướt và hiển thị lại sau khi ngừng
-});
-
-// Hàm thêm dòng mới vào bảng
+// Hàm thêm dòng mới vào bảng với id duy nhất cho mỗi ô input
 function addRow() {
   const tableBody = document.getElementById("table-body");
   const newRow = document.createElement("tr");
 
+  const uniqueId = Date.now(); // Tạo id duy nhất cho các ô input
+
   newRow.innerHTML = `
-        <td><input type="text" placeholder="No."></td>
-        <td><input type="text" placeholder="Book Name"></td>
-        <td><input type="text" placeholder="Category"></td>
-        <td><input type="text" placeholder="Author"></td>
-        <td><input type="number" placeholder="Quantity"></td>
-    `;
+        <td><input type="text" placeholder="ID" class="book-no" id="idInput_${uniqueId}" required></td>
+    <td class="nameBook">
+        <input type="text" placeholder="Book name" class="book-name" id="nameBookInput_${uniqueId}" oninput="showSuggestions(this)" required>
+        <div class="autocomplete-suggestions" style="display: none;"></div>
+    </td>
+    <td><input type="text" placeholder="Category" class="book-category" id="categoryInput_${uniqueId}" required></td>
+    <td><input type="text" placeholder="Author" class="book-author" id="authorInput_${uniqueId}" required></td>
+    <td><input type="number" placeholder="Quantity" class="book-quantity" id="quantityInput_${uniqueId}" min="1" required></td>
+  `;
   tableBody.appendChild(newRow);
 }
 
-// Hàm xử lý khi nhấn nút Done
+// Hàm xử lý khi nhấn nút Done với id duy nhất cho từng ô input
 function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
@@ -208,14 +209,15 @@ function submitBooks() {
   // Làm mới bảng sau khi nhấn Done
   document.getElementById("table-body").innerHTML = `
         <tr>
-            <td><input type="text" name="no1" placeholder="No."></td>
-            <td><input type="text" name="book1" placeholder="Book Name"></td>
-            <td><input type="text" name="category1" placeholder="Category"></td>
-            <td><input type="text" name="author1" placeholder="Author"></td>
-            <td><input type="number" name="quantity1" placeholder="Quantity"></td>
+            <td><input type="text" name="id" placeholder="ID" id="idInput_1" required></td>
+            <td><input type="text" name="book" placeholder="Book Name" id="nameBookInput_1" oninput="showSuggestions(this)" required></td>
+            <td><input type="text" name="category" placeholder="Category" id="categoryInput_1" required></td>
+            <td><input type="text" name="author" placeholder="Author" id="authorInput_1" required></td>
+            <td><input type="number" name="quantity" placeholder="Quantity" id="quantityInput_1" min="1" required></td>
         </tr>
     `;
 }
+
 // Hiển thị toast
 function showToast(type) {
   // Lấy phần tử toast tương ứng
