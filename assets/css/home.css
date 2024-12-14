@@ -1748,7 +1748,6 @@ input[type="text"].search-input {
 }
 
 
-
 /* Form Thêm Khách Hàng */
 #addCustomerForm {
     width: 100%;
@@ -1820,4 +1819,10 @@ input[type="text"].search-input {
 
 #customerForm button[type="button"]:hover {
     background-color: #c82333;
+}
+
+/* Edit page */ 
+.add-row-btn .edit {
+    width: 20px;
+    height: 20px;
 }

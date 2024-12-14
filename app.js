@@ -141,6 +141,17 @@ app.get("/profile", (req, res) => {
   });
 });
 
+app.get("/regulation", (req, res) => {
+  const sql = "SELECT * FROM Quy_dinh";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: error.message });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 app.post("/addCustomer", (req, res) => {
   const { name, phone, address, email, gender } = req.body;
 
@@ -179,12 +190,67 @@ app.post("/addCustomer", (req, res) => {
               console.error("Error fetching updated customer data:", err);
               return res.status(500).send("Server error");
             }
-            res.json(updatedCustomers); // Trả về danh sách khách hàng mới
+            res.redirect("/customer"); // Trả về danh sách khách hàng mới
           }
         );
       }
     );
   });
+});
+
+// API để cập nhật bảng Quy_định
+app.post("/editRegulation", (req, res) => {
+  const {
+    min_input,
+    low_inventory,
+    low_customer_debt,
+    stock_after_sale,
+    rule,
+  } = req.body;
+
+  // Kiểm tra dữ liệu đầu vào
+  if (
+    !min_input ||
+    !low_inventory ||
+    !low_customer_debt ||
+    !stock_after_sale ||
+    rule === undefined // Đảm bảo `rule` được truyền
+  ) {
+    return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
+  }
+
+  // Chuyển đổi `rule` sang số 0 hoặc 1
+  const ruleBit = parseInt(rule) === 1 ? 1 : 0;
+
+  // Câu lệnh SQL
+  const updateQuery = `
+  UPDATE Quy_dinh SET
+    So_luong_nhap_it_nhat = ?,
+    So_luong_ton_it_hon = ?,
+    Khach_hang_no_khong_qua = ?,
+    So_luong_ton_sau_khi_ban_it_nhat = ?,
+    Su_Dung_QD4 = ?;
+`;
+
+  connection.query(
+    updateQuery,
+    [min_input, low_inventory, low_customer_debt, stock_after_sale, ruleBit],
+    (err, result) => {
+      if (err) {
+        console.error("Chi tiết lỗi khi cập nhật quy định:", err);
+        return res.status(500).json({
+          message: "Đã xảy ra lỗi khi cập nhật quy định!",
+          error: err.message,
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Quy định không tồn tại!" });
+      }
+
+      res.redirect("/edit");
+    }
+  );
 });
 
 // Gửi file HTML trang đăng ký
@@ -217,8 +283,16 @@ app.get("/lookup", (req, res) => {
   res.sendFile(join(__dirname, "lookup.html"));
 });
 
+app.get("/edit", (req, res) => {
+  res.sendFile(join(__dirname, "edit.html"));
+});
+
 app.get("/customer", (req, res) => {
   res.sendFile(join(__dirname, "customer.html"));
+});
+
+app.get("/staff", (req, res) => {
+  res.sendFile(join(__dirname, "staff.html"));
 });
 
 // Khởi động server
