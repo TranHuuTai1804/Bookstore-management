@@ -101,9 +101,9 @@ async function selectInput(list) {
           <p class="book-author">Tác giả: ${selectedBook.Ten_tac_gia}</p>
           <p class="book-price">Giá: $${selectedBook.Gia}</p>
           <div class="progress-container">
-            <span class="progress-text">${selectedBook.So_luong}/30</span>
+            <span class="progress-text">${selectedBook.So_luong}/300</span>
             <div class="progress-bar" style="width: ${
-              (selectedBook.So_luong / 30) * 100
+              (selectedBook.So_luong / 300) * 100
             }%;"></div>
           </div>
         </div>
@@ -141,9 +141,9 @@ async function showDefaultList(button = null) {
         <h3 class="book-title">${book.Ten_sach}</h3>
         <p class="book-price">$${book.Gia}</p>
         <div class="progress-container">
-            <span class="progress-text">${book.So_luong}/30</span>
+            <span class="progress-text">${book.So_luong}/300</span>
             <div class="progress-bar" style="width: ${
-              (book.So_luong / 30) * 100
+              (book.So_luong / 300) * 100
             }%;"></div>
         </div>
       `;
@@ -180,9 +180,9 @@ async function selectBook(book) {
       <p class="book-author">Tác giả: ${book.Ten_tac_gia}</p>
       <p class="book-price">Giá: $${book.Gia}</p>
       <div class="progress-container">
-        <span class="progress-text">${book.So_luong}/30</span>
+        <span class="progress-text">${book.So_luong}/300</span>
         <div class="progress-bar" style="width: ${
-          (book.So_luong / 30) * 100
+          (book.So_luong / 300) * 100
         }%;"></div>
       </div>
     </div>

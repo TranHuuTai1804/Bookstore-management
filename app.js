@@ -119,6 +119,7 @@ app.post("/signup", (req, res) => {
   );
 });
 
+//Route lấy ra danh sách thông tin bảng sách
 app.get("/api/books", (req, res) => {
   const sql = "SELECT * FROM Sach";
   connection.query(sql, (err, results) => {
@@ -130,6 +131,7 @@ app.get("/api/books", (req, res) => {
   });
 });
 
+//Route lấy ra thông tin bảng khách hàng
 app.get("/profile", (req, res) => {
   const sql = "SELECT * FROM Khach_hang";
   connection.query(sql, (err, results) => {
@@ -141,6 +143,7 @@ app.get("/profile", (req, res) => {
   });
 });
 
+//Route lấy ra thông tin bảng quy định
 app.get("/regulation", (req, res) => {
   const sql = "SELECT * FROM Quy_dinh";
   connection.query(sql, (err, results) => {
@@ -152,6 +155,19 @@ app.get("/regulation", (req, res) => {
   });
 });
 
+//Tạo hàm query
+function runQuery(sql, params) {
+  return new Promise((resolve, reject) => {
+    connection.query(sql, params, (err, results) => {
+      if (err) {
+        return reject(err); // Trả về lỗi nếu có
+      }
+      resolve(results); // Trả về kết quả truy vấn
+    });
+  });
+}
+
+//Route thêm vào khách hàng mới
 app.post("/addCustomer", (req, res) => {
   const { name, phone, address, email, gender } = req.body;
 
@@ -198,7 +214,57 @@ app.post("/addCustomer", (req, res) => {
   });
 });
 
-// API để cập nhật bảng Quy_định
+//Route để nhập sách
+app.post("/addBook", async (req, res) => {
+  try {
+    const books = req.body.id.map((id, index) => ({
+      id,
+      name: req.body.name[index],
+      category: req.body.category[index],
+      author: req.body.author[index],
+      quantity: req.body.quantity[index],
+      price: req.body.price[index],
+    }));
+
+    for (const book of books) {
+      const rows = await runQuery(
+        `SELECT ID_sach, So_luong FROM Sach
+         WHERE Ten_sach = ? AND The_loai = ? AND Ten_tac_gia = ?`,
+        [book.name, book.category, book.author]
+      );
+
+      if (rows.length > 0) {
+        const currentQuantity = rows[0].So_luong;
+        const newQuantity =
+          parseInt(currentQuantity, 10) + parseInt(book.quantity, 10);
+        await runQuery(`UPDATE Sach SET So_luong = ? WHERE ID_sach = ?`, [
+          newQuantity,
+          rows[0].ID_sach,
+        ]);
+      } else {
+        await runQuery(
+          `INSERT INTO Sach (ID_sach, Ten_sach, The_loai, Ten_tac_gia, So_luong, Gia)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            book.id,
+            book.name,
+            book.category,
+            book.author,
+            book.quantity,
+            book.price,
+          ]
+        );
+      }
+    }
+
+    res.redirect("/bookempty?message=Book+added+successfully");
+  } catch (error) {
+    console.error(error);
+    res.redirect("/bookempty?message=Error+processing+books");
+  }
+});
+
+//Route để cập nhật bảng Quy_định
 app.post("/editRegulation", (req, res) => {
   const {
     min_input,
@@ -207,17 +273,6 @@ app.post("/editRegulation", (req, res) => {
     stock_after_sale,
     rule,
   } = req.body;
-
-  // Kiểm tra dữ liệu đầu vào
-  if (
-    !min_input ||
-    !low_inventory ||
-    !low_customer_debt ||
-    !stock_after_sale ||
-    rule === undefined // Đảm bảo `rule` được truyền
-  ) {
-    return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin!" });
-  }
 
   // Chuyển đổi `rule` sang số 0 hoặc 1
   const ruleBit = parseInt(rule) === 1 ? 1 : 0;

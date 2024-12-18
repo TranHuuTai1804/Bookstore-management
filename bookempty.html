@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/home.css">
 </head>
 <body>
@@ -37,7 +38,7 @@
         <h3>Date:</h3>
         <div class="date-picker">
                 <input type="text" id="date-receipt" placeholder="Select Date" readonly>
-        </div>
+            </div>
     </div>
 
     <!-- Bảng -->
@@ -51,18 +52,20 @@
                         <th>Category</th>
                         <th>Author</th>
                         <th>Quantity</th>
+                        <th>Price</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
                     <tr>
-                        <td><input type="text" name="id" placeholder="ID" class="book-no" id="idInput" required></td>
+                        <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
                         <td class="nameBook">
-                            <input type="text" name="name" id="nameBookInput" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+                            <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
                             <div class="autocomplete-suggestions" style="display: none;"></div>
                         </td>
-                        <td><input type="text" name="category" placeholder="Category" class="book-category" id="categoryInput" required></td>
-                        <td><input type="text" name="author" placeholder="Author" class="book-author" id="authorInput" required></td>
-                        <td><input type="number" name="quantity" placeholder="Quantity" class="book-quantity" min="1" required></td>
+                        <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
+                        <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
+                        <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
+                        <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
                     </tr>
                 </tbody>
             </table>
@@ -70,12 +73,14 @@
             <button type="submit" class="done-btn">Done</button>
         </form>
     </div>
+    
+    
 
     <button class="open-menu" onclick="toggleMenu()">></button>
 
     <!-- Overlay -->
     <div id="overlay" class="overlay"></div>
-
+    
     <!-- Menu Section -->
     <div id="hero-menu" class="menu-ovl" style="display: none;">
         <button><a href="/bookempty">Book Entry Form</a></button>
@@ -85,10 +90,8 @@
         <button><a href="/report">Monthly Report</a></button>
         <button><a href="/edit">Edit Regulations</a></button>
     </div>
-
-    <!-- Toast thông báo -->
-    <div id="toastSuccess" class="toast">Lập biên lai thành công !!!</div>
-    <div id="toastError" class="toastError">Lập biên lai thất bại! , còn mục chưa nhập.</div>
+    
 </body>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="/js/bookempty.js"></script>
 </html>
