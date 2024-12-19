@@ -1,47 +1,43 @@
+
 function showTable(type) {
-  const enventoryBtn = document.getElementById("enventory-btn");
+  const InventoryBtn = document.getElementById("Inventory-btn");
   const debtBtn = document.getElementById("debt-btn");
-  const enventoryTable = document.getElementById("enventory-table");
+  const InventoryTable = document.getElementById("Inventory-table");
   const debtTable = document.getElementById("debt-table");
 
-  if (type === "enventory") {
+  if (type === "Inventory") {
     // Đổi trạng thái nút
-    enventoryBtn.classList.add("active");
+    InventoryBtn.classList.add("active");
     debtBtn.classList.remove("active");
 
-    // Hiển thị bảng enventory
-    enventoryTable.style.display = "block";
+    // Hiển thị bảng Inventory
+    InventoryTable.style.display = "block";
     debtTable.style.display = "none";
   } else if (type === "debt") {
     // Đổi trạng thái nút
     debtBtn.classList.add("active");
-    enventoryBtn.classList.remove("active");
+    InventoryBtn.classList.remove("active");
 
     // Hiển thị bảng Debt
     debtTable.style.display = "block";
-    enventoryTable.style.display = "none";
+    InventoryTable.style.display = "none";
   }
 }
 
 // Lấy thẻ input ngày
-const dateInput = document.getElementById("date-receipt");
+const dateInput = document.getElementById("date-report");
 
 // Hàm để lấy ngày hiện tại theo định dạng YYYY-MM-DD
 function getCurrentDate() {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return `${month}/${year}`;
 }
 
 // Gán ngày hiện tại vào thẻ input khi trang được tải lên
 dateInput.value = getCurrentDate();
 
-// Cập nhật ngày khi người dùng nhấp vào thẻ input
-dateInput.addEventListener("focus", function () {
-  dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
-});
 
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");
@@ -89,11 +85,11 @@ menuOv.addEventListener("scroll", function () {
 // Hàm thêm dòng mới vào bảng
 function addRow() {
   // Kiểm tra bảng đang hiển thị
-  const enventoryTable = document.getElementById("enventory-table");
+  const InventoryTable = document.getElementById("Inventory-table");
   const debtTable = document.getElementById("debt-table");
 
-  if (enventoryTable.style.display === "block") {
-    // Thêm dòng mới vào bảng enventory
+  if (InventoryTable.style.display === "block") {
+    // Thêm dòng mới vào bảng Inventory
     const tableBody = document.getElementById("table-body");
     const newRow = document.createElement("tr");
 
@@ -123,11 +119,11 @@ function addRow() {
 // Hàm xử lý khi nhấn nút Done
 function submitBooks() {
   // Kiểm tra bảng đang hiển thị
-  const enventoryTable = document.getElementById("enventory-table");
+  const InventoryTable = document.getElementById("Inventory-table");
   const debtTable = document.getElementById("debt-table");
 
-  if (enventoryTable.style.display === "block") {
-    // Xử lý dữ liệu cho bảng enventory
+  if (InventoryTable.style.display === "block") {
+    // Xử lý dữ liệu cho bảng Inventory
     const rows = document.querySelectorAll("#table-body tr");
     const books = [];
     let hasEmptyField = false;
@@ -159,7 +155,7 @@ function submitBooks() {
       return;
     }
 
-    console.log("Enventory Report:", books);
+    console.log("Inventory Report:", books);
 
     showToast("success");
   } else if (debtTable.style.display === "block") {
@@ -201,7 +197,7 @@ function submitBooks() {
   }
 
   // Làm mới bảng sau khi nhấn Done (áp dụng cho cả hai bảng)
-  if (enventoryTable.style.display === "block") {
+  if (InventoryTable.style.display === "block") {
     document.getElementById("table-body").innerHTML = `
                     <tr>
                         <td><input type="text" placeholder="No."></td>
@@ -224,17 +220,66 @@ function submitBooks() {
   }
 }
 
-// Hiển thị toast
+// Lắng nghe sự kiện click trên thẻ <a> với id "get-date"
+document.getElementById("get-date").addEventListener("click", async (event) => {
+  event.preventDefault(); // Ngăn chặn hành vi mặc định của thẻ <a>
+
+  // Lấy giá trị từ input date-report
+  const dateInput = document.getElementById("date-report").value.trim();
+  const regex = /^(0[1-9]|1[0-2])\/\d{4}$/; // Kiểm tra định dạng MM/YYYY
+
+  if (regex.test(dateInput)) {
+    const [month, year] = dateInput.split('/');
+    const startDate = `${year}-${month}-01`; // Chuyển đổi thành định dạng YYYY-MM-01
+
+    try {
+      // Gửi yêu cầu GET đến API server với tham số date
+      const response = await fetch(`/report?date=${startDate}`);
+
+      if (!response.ok) {
+        console.error('Lỗi từ server:', response.statusText);
+        throw new Error(`Lỗi server: ${response.status}`);
+      }
+
+      const data = await response.json(); // Parse JSON từ phản hồi server
+      populateTable(data); // Gọi hàm populateTable để hiển thị dữ liệu
+
+      showToast("success"); // Hiển thị toast thành công
+    } catch (error) {
+      console.error('Lỗi khi lấy dữ liệu:', error.message);
+      showToast("error"); // Hiển thị toast lỗi
+    }
+  } else {
+    showToast("error"); // Hiển thị toast lỗi nếu định dạng không hợp lệ
+  }
+});
+
+// Hàm hiển thị dữ liệu lên bảng
+function populateTable(data) {
+  const tableBody = document.getElementById("table-body");
+
+  // Xóa nội dung bảng trước khi thêm dữ liệu mới
+  tableBody.innerHTML = "";
+
+  data.forEach((row, index) => {
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+      <td><input type="text" value="${index + 1}" placeholder="No." readonly></td>
+      <td><input type="text" value="${row.Ten_Sach}" placeholder="Book Name"></td>
+      <td><input type="text" value="${row.Tong_nhap}" placeholder="First Debt"></td>
+      <td><input type="text" value="0" placeholder="Arise"></td>
+      <td><input type="text" value="${row.Tong_nhap - row.Tong_ban}" placeholder="Last Debt" readonly></td>
+    `;
+    tableBody.appendChild(newRow);
+  });
+}
+
+// Hàm hiển thị thông báo toast
 function showToast(type) {
-  // Lấy phần tử toast tương ứng
-  const toast =
-    type === "success"
-      ? document.getElementById("toastSuccess")
-      : document.getElementById("toastError");
-
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+  const toast = type === "success"
+    ? document.getElementById("toastSuccess")
+    : document.getElementById("toastError");
+    
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000); // Ẩn sau 3 giây
 }

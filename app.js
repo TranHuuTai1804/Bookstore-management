@@ -171,7 +171,49 @@ app.get("/lookup", (req, res) => {
   res.sendFile(join(__dirname, "lookup.html"));
 });
 
+// API để xử lý yêu cầu từ phía client
+app.get('/report', async (req, res) => {
+  const { date } = req.query; // Lấy giá trị 'date' từ query string
+  
+  if (!date) {
+    // Nếu không có ngày trong query string, trả lỗi
+    return res.status(400).json({ error: 'Ngày không được cung cấp.' });
+  }
+
+  try {
+    const [rows] = await connection.execute(`
+      WITH Thong_ke_nhap AS (
+        SELECT s.ID_Sach, COALESCE(SUM(ct.So_luong), 0) AS Tong_nhap
+        FROM Sach s
+        LEFT JOIN Chi_tiet_phieu_nhap_sach ct ON s.ID_Sach = ct.ID_Sach
+        LEFT JOIN Phieu_nhap_sach pn ON ct.ID_Phieu = pn.ID_Phieu
+        WHERE pn.Ngay_nhap >= ?
+        GROUP BY s.ID_Sach
+      ),
+      Thong_ke_ban AS (
+        SELECT s.ID_Sach, COALESCE(SUM(cthd.So_luong), 0) AS Tong_ban
+        FROM Sach s
+        LEFT JOIN Chi_tiet_hoa_don cthd ON s.ID_Sach = cthd.ID_Sach
+        LEFT JOIN Hoa_don_ban_sach hd ON cthd.ID_Hoa_don = hd.ID_Hoa_don
+        WHERE hd.Ngay_lap_hoa_don >= ?
+        GROUP BY s.ID_Sach
+      )
+      SELECT s.ID_Sach, s.Ten_Sach, COALESCE(TN.Tong_nhap, 0) AS Tong_nhap, COALESCE(TB.Tong_ban, 0) AS Tong_ban
+      FROM Sach s
+      LEFT JOIN Thong_ke_nhap TN ON s.ID_Sach = TN.ID_Sach
+      LEFT JOIN Thong_ke_ban TB ON s.ID_Sach = TB.ID_Sach;
+    `, [date, date]);
+
+    res.json(rows); // Trả về kết quả dưới dạng JSON
+  } catch (error) {
+    console.error('Lỗi truy vấn:', error);
+    res.status(500).json({ error: 'Đã có lỗi xảy ra trong quá trình truy vấn dữ liệu.' });
+  }
+});
+
 // Khởi động server
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
+
+
