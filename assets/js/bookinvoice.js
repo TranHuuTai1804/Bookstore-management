@@ -145,23 +145,20 @@ dateInput.addEventListener("focus", function () {
 // Hàm thêm dòng mới vào bảng
 function addRow() {
   const tableBody = document.getElementById("table-body");
+  const rowIndex = tableBody.children.length;
+
   const newRow = document.createElement("tr");
-
-  const uniqueId = `book-name-${Date.now()}`; // Sử dụng thời gian để tạo ID duy nhất
-
   newRow.innerHTML = `
-      <td><input type="text" name="id" placeholder="ID"></td>
-      <td class="nameBook">
-          <input name="book" type="text" id="${uniqueId}" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
-          <div class="autocomplete-suggestions" style="display: none;"></div>
-      </td>
-      <td><input type="text" name="category" placeholder="Category" id="categoryInput"></td>
-      <td><input type="number" name="quantity" placeholder="Quantity" oninput="calculatePrice(this)"></td>
-      <td><input type="text" name="price" placeholder="Price" id="priceInput"></td>
- `;
+        <td class="nameBook">
+        <input name="book[]" type="text" id="book-name" placeholder="Book name" class="book-name" data-row-index="${rowIndex}" oninput="showSuggestions(this)" required>
+        <div class="autocomplete-suggestions" style="display: none;"></div>
+    </td>
+    <td><input type="text" name="category[]" placeholder="Category" id="categoryInput" data-row-index="${rowIndex}" required></td>
+    <td><input type="number" name="quantity[]" placeholder="Quantity" id="quantityInput" oninput="calculatePrice(this)" data-row-index="${rowIndex}" required></td>
+    <td><input type="text" name="price[]" placeholder="Price" id="priceInput" data-row-index="${rowIndex}" required></td>
+  `;
   tableBody.appendChild(newRow);
 }
-
 // Hàm xử lý khi nhấn nút Done
 function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
@@ -204,7 +201,6 @@ function submitBooks() {
   // Làm mới bảng sau khi nhấn Done
   document.getElementById("table-body").innerHTML = `
          <tr>
-          <td><input type="text" name="id" placeholder="ID"></td>
           <td class="nameBook">
               <input name="book" type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)">
               <div class="autocomplete-suggestions" style="display: none;"></div>

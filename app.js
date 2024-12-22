@@ -18,6 +18,7 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
+  port: 3307,
   password: "",
   database: "QLNhasach",
 });
@@ -41,11 +42,12 @@ app.get("/", (req, res) => {
 // Route đăng nhập
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
+  console.log("user: ", req.body);
 
   // Kiểm tra email trong cơ sở dữ liệu
   connection.query(
-    "SELECT id, password, status FROM users WHERE email = ?",
-    [email],
+    "SELECT id, password, status FROM users WHERE email LIKE ?",
+    [`%${email}%`],
     (err, results) => {
       if (err) {
         console.error("Lỗi truy vấn:", err);
@@ -88,7 +90,7 @@ app.post("/signup", (req, res) => {
   // Kiểm tra nếu email đã tồn tại
   connection.query(
     "SELECT id FROM users WHERE email = ?",
-    [email],
+    [`%${email}%`],
     (err, results) => {
       if (err) {
         console.error("Lỗi truy vấn:", err);
@@ -213,40 +215,98 @@ app.post("/addCustomer", (req, res) => {
     );
   });
 });
-
-//Route để nhập sách
 app.post("/addBook", async (req, res) => {
   try {
-    const books = req.body.id.map((id, index) => ({
-      id,
-      name: req.body.name[index],
+    // Loop through all books submitted
+    const books = req.body.name.map((name, index) => ({
+      name: name,
       category: req.body.category[index],
       author: req.body.author[index],
       quantity: req.body.quantity[index],
       price: req.body.price[index],
     }));
+    console.log("Nhận từ client: ", books);
 
+    // Loop through each book and process
     for (const book of books) {
-      const rows = await runQuery(
-        `SELECT ID_sach, So_luong FROM Sach
-         WHERE Ten_sach = ? AND The_loai = ? AND Ten_tac_gia = ?`,
-        [book.name, book.category, book.author]
-      );
+      // Kiểm tra số lượn g nhập ít nhất là 150
+      if (parseInt(book.quantity, 10) < 150) {
+        // Chuyển hướng với thông báo lỗi khi số lượng nhập ít hơn 150
+        return res.redirect("/bookempty?message=Số+luong+nhap+it+nhat+la+150.");
+      }
+     
+       // Kiểm tra số lượng tồn trong bảng Sach nhỏ hơn 300
+      const rows = await runQuery(`SELECT * FROM Sach WHERE Ten_sach LIKE ?`, [
+        `%${book.name}%`,
+      ]);
 
+      const existingBook = rows[0];
+
+      if (existingBook.So_luong >= 300) {
+        return res.redirect("/bookempty?message=Không+thể+thêm+sách+có+lượng+tồn+lớn+hơn+300.");
+      }
+
+      let id_sach;
+
+      // Nếu sách đã tồn tại, cập nhật số lượng và giá
       if (rows.length > 0) {
-        const currentQuantity = rows[0].So_luong;
+        const existingBook = rows[0];
+        const currentQuantity = existingBook.So_luong;
+        const currentPrice = existingBook.Gia;
+
+        // Tính toán số lượng mới (cộng dồn số lượng cũ và mới)
         const newQuantity =
           parseInt(currentQuantity, 10) + parseInt(book.quantity, 10);
-        await runQuery(`UPDATE Sach SET So_luong = ? WHERE ID_sach = ?`, [
-          newQuantity,
-          rows[0].ID_sach,
-        ]);
-      } else {
+
+        // Sử dụng giá mới nếu giá khác, nếu không giữ giá cũ
+        const newPrice =
+          currentPrice !== book.price ? book.price : currentPrice;
+
+        // Cập nhật số lượng và giá trong bảng Sach
         await runQuery(
+          `UPDATE Sach 
+           SET So_luong = ?, Gia = ? 
+           WHERE ID_sach = ?`,
+          [newQuantity, newPrice, existingBook.ID_sach]
+        );
+        id_sach = existingBook.ID_sach; // Lấy ID_sach của sách đã tồn tại
+
+        // Thêm vào bảng Phieu_nhap_sach với ID_sach
+        const insertPhieuResult = await runQuery(
+          `INSERT INTO phieu_nhap_sach (Ngay_nhap, Tong_so_luong, ID_sach) VALUES (NOW(), ?, ?)`,
+          [book.quantity, id_sach]
+        );
+        console.log(
+          `Sách với ID ${id_sach} đã được thêm vào phieunhapsach với số lượng ${book.quantity}`
+        );
+
+        // Lấy ID_Phieu vừa tạo
+        const id_phieu = insertPhieuResult.insertId;
+
+        // Thêm vào bảng Chi_tiet_phieu_nhap_sach với ID_Phieu và ID_Sach
+        const insertChiTietResult = await runQuery(
+          `INSERT INTO Chi_tiet_phieu_nhap_sach (ID_Phieu, ID_Sach, So_luong)
+           VALUES (?, ?, ?)`,
+          [id_phieu, id_sach, book.quantity]
+        );
+
+        console.log(
+          `Sách với ID ${id_sach} đã được thêm vào Chi_tiet_phieu_nhap_sach với số lượng ${book.quantity}`
+        );
+      } else {
+        // Nếu sách chưa tồn tại, thêm mới vào bảng Sach
+        const maxIdResult = await runQuery(
+          `SELECT MAX(ID_sach) AS max_id FROM Sach`
+        );
+
+        const newId = maxIdResult[0].max_id ? maxIdResult[0].max_id + 1 : 1;
+
+        // Thêm sách mới vào bảng Sach với ID_sach là max_id + 1
+        const result = await runQuery(
           `INSERT INTO Sach (ID_sach, Ten_sach, The_loai, Ten_tac_gia, So_luong, Gia)
            VALUES (?, ?, ?, ?, ?, ?)`,
           [
-            book.id,
+            newId,
             book.name,
             book.category,
             book.author,
@@ -254,16 +314,52 @@ app.post("/addBook", async (req, res) => {
             book.price,
           ]
         );
+
+        console.log("Trường hợp sách mới: ", result);
+
+        // Lấy ID_sach của sách vừa thêm mới
+        id_sach = newId;
+
+        // Thêm vào bảng Phieu_nhap_sach với ID_sach vừa lấy được
+        const maxPhieuResult = await runQuery(
+          `SELECT MAX(ID_Phieu) AS max_phieu_id FROM phieu_nhap_sach`
+        );
+
+        // Tạo ID_Phieu mới
+        const newPhieuId = maxPhieuResult[0].max_phieu_id
+          ? maxPhieuResult[0].max_phieu_id + 1
+          : 1;
+
+        // Thêm vào bảng Phieu_nhap_sach với ID_sach và ID_Phieu mới
+        const insertPhieuResult = await runQuery(
+          `INSERT INTO phieu_nhap_sach (ID_Phieu, Ngay_nhap, Tong_so_luong, ID_sach) VALUES (?, NOW(), ?, ?)`,
+          [newPhieuId, book.quantity, id_sach]
+        );
+
+        // Lấy ID_Phieu vừa tạo (insertId của Phieu_nhap_sach)
+        const id_phieu = insertPhieuResult.insertId;
+
+        // Thêm vào bảng Chi_tiet_phieu_nhap_sach với ID_Phieu và ID_Sach
+        const insertChiTietResult = await runQuery(
+          `INSERT INTO Chi_tiet_phieu_nhap_sach (ID_Phieu, ID_Sach, So_luong)
+           VALUES (?, ?, ?)`,
+          [id_phieu, id_sach, book.quantity]
+        );
+
+        console.log(
+          `Sách với ID ${id_sach} đã được thêm vào Chi_tiet_phieu_nhap_sach với số lượng ${book.quantity}`
+        );
       }
     }
 
+    // Redirect to /bookempty with a success message
     res.redirect("/bookempty?message=Book+added+successfully");
   } catch (error) {
     console.error(error);
+    // Redirect to /bookempty with an error message
     res.redirect("/bookempty?message=Error+processing+books");
   }
 });
-
 //Route để cập nhật bảng Quy_định
 app.post("/editRegulation", (req, res) => {
   const {

@@ -143,7 +143,6 @@ function selectSuggestion(bookName, suggestionElement) {
     console.error("Lỗi khi chọn gợi ý:", error);
   }
 }
-
 // Hàm thêm hàng mới
 function addRow() {
   const tableBody = document.getElementById("table-body");
@@ -151,19 +150,17 @@ function addRow() {
 
   const newRow = document.createElement("tr");
   newRow.innerHTML = `
-    <td><input type="text" name="id[]" placeholder="ID" class="book-no" data-row-index="${rowIndex}" required></td>
-    <td class="nameBook">
-        <input type="text" name="name[]" placeholder="Book name" class="book-name" data-row-index="${rowIndex}" oninput="showSuggestions(this)" required>
-        <div class="autocomplete-suggestions" style="display: none;"></div>
-    </td>
-    <td><input type="text" name="category[]" placeholder="Category" class="book-category" data-row-index="${rowIndex}" required></td>
-    <td><input type="text" name="author[]" placeholder="Author" class="book-author" data-row-index="${rowIndex}" required></td>
-    <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" data-row-index="${rowIndex}" required></td>
-    <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" data-row-index="${rowIndex}" required></td>
+      <td class="nameBook">
+          <input type="text" name="name[]" placeholder="Book name" class="book-name" data-row-index="${rowIndex}" oninput="showSuggestions(this)" required>
+          <div class="autocomplete-suggestions" style="display: none;"></div>
+      </td>
+      <td><input type="text" name="category[]" placeholder="Category" class="book-category" data-row-index="${rowIndex}" required></td>
+      <td><input type="text" name="author[]" placeholder="Author" class="book-author" data-row-index="${rowIndex}" required></td>
+      <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" data-row-index="${rowIndex}" required></td>
+      <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" data-row-index="${rowIndex}" required></td>
   `;
   tableBody.appendChild(newRow);
 }
-
 // Ẩn gợi ý khi người dùng nhấp bên ngoài
 document.addEventListener("click", function (e) {
   if (
@@ -270,7 +267,6 @@ function submitBooks() {
   // Làm mới bảng sau khi nhấn Done
   document.getElementById("table-body").innerHTML = `
         <tr>
-            <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
       <td class="nameBook">
           <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
           <div class="autocomplete-suggestions" style="display: none;"></div>

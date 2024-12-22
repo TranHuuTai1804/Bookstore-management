@@ -318,6 +318,12 @@ body {
     gap: 10px;
     position: relative;
 }
+.customer-debt{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+}
 
 
 .date {
