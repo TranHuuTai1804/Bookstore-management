@@ -231,7 +231,6 @@ document.getElementById("get-date").addEventListener("click", async (event) => {
   if (regex.test(dateInput)) {
     const [month, year] = dateInput.split('/');
     const startDate = `${year}-${month}-01`; // Chuyển đổi thành định dạng YYYY-MM-01
-
     try {
       // Gửi yêu cầu GET đến API server với tham số date
       const response = await fetch(`/report?date=${startDate}`);
@@ -253,7 +252,7 @@ document.getElementById("get-date").addEventListener("click", async (event) => {
     showToast("error"); // Hiển thị toast lỗi nếu định dạng không hợp lệ
   }
 });
-
+// Hàm hiển thị dữ liệu lên bảng
 // Hàm hiển thị dữ liệu lên bảng
 function populateTable(data) {
   const tableBody = document.getElementById("table-body");
@@ -261,25 +260,45 @@ function populateTable(data) {
   // Xóa nội dung bảng trước khi thêm dữ liệu mới
   tableBody.innerHTML = "";
 
-  data.forEach((row, index) => {
+  // Kiểm tra nếu dữ liệu không phải là mảng
+  if (!Array.isArray(data)) {
+    console.warn("Dữ liệu không phải mảng, chuyển thành mảng:", data);
+    data = data ? [data] : []; // Nếu data không hợp lệ, chuyển thành mảng rỗng
+  }
+  
+  // Hiển thị dữ liệu trong bảng
+  data.forEach(row => {
+    // Kiểm tra các giá trị trong row trước khi sử dụng
+    const idSach = row.ID_Sach || "N/A";  // Nếu ID_Sach không hợp lệ, gán "N/A"
+    const tenSach = row.Ten_Sach || "Không có tên";  // Nếu Ten_Sach không hợp lệ, gán "Không có tên"
+
+    // Chuyển đổi các giá trị sang số
+    const tonDauKy = parseInt(row.Ton_dau_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+    const tongNhap = parseInt(row.Tong_nhap) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+    const tongBan = parseInt(row.Tong_ban) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+    const tonCuoiKy = parseInt(row.Ton_cuoi_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+
+    // Tạo dòng mới trong bảng
     const newRow = document.createElement("tr");
     newRow.innerHTML = `
-      <td><input type="text" value="${index + 1}" placeholder="No." readonly></td>
-      <td><input type="text" value="${row.Ten_Sach}" placeholder="Book Name"></td>
-      <td><input type="text" value="${row.Tong_nhap}" placeholder="First Debt"></td>
-      <td><input type="text" value="0" placeholder="Arise"></td>
-      <td><input type="text" value="${row.Tong_nhap - row.Tong_ban}" placeholder="Last Debt" readonly></td>
+      <td>${idSach}</td>
+      <td>${tenSach}</td>
+      <td>${tonDauKy}</td>
+      <td>${tongNhap - tongBan}</td>
+      <td>${tonCuoiKy}</td>
     `;
     tableBody.appendChild(newRow);
   });
 }
+
+
 
 // Hàm hiển thị thông báo toast
 function showToast(type) {
   const toast = type === "success"
     ? document.getElementById("toastSuccess")
     : document.getElementById("toastError");
-    
+
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3000); // Ẩn sau 3 giây
 }
