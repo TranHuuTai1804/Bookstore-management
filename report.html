@@ -41,7 +41,8 @@
     <div class="date">
         <h3>Date report:</h3>
         <div class="date-picker">
-            <input type="text" id="date-receipt" placeholder="Select Date" readonly>
+            <!-- Thay đổi type thành month để người dùng chọn tháng và năm -->
+            <input type="month" id="date-receipt" placeholder="Select Month and Year" required>
             <img src="/img/calendar.svg" alt="Calendar Icon" id="calendar-icon">
         </div>
     </div>
@@ -59,13 +60,9 @@
                 <th>Last Existence</th>
             </tr>
         </thead>
-        <tbody id="table-body">
+        <tbody id="table-body">  
             <tr>
-                <td><input type="text" name="no1" placeholder="No." required></td>
-                <td><input type="text" name="book1" placeholder="Book Name" required></td>
-                <td><input type="text" name="first-Existence1" placeholder="First Existence" required></td>
-                <td><input type="text" name="arise1" placeholder="Arise" required></td>
-                <td><input type="text" name="last-Existence1" placeholder="Last Existence" required></td>
+              <!-- Danh sach sẽ hiện ở đây -->
             </tr>
         </tbody>
     </table>

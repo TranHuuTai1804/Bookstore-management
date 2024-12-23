@@ -211,6 +211,11 @@ function submitBooks() {
          </tr>
      `;
 }
+// Hàm chuyển hướng đến trang /receipts
+function redirectToReceipts() {
+  window.location.href = "/receipts"; // Chuyển hướng đến trang receipts
+}
+
 
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");

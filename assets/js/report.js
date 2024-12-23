@@ -24,20 +24,23 @@ function showTable(type) {
 }
 
 // Lấy thẻ input ngày
-const dateInput = document.getElementById("date-receipt");
+// const dateInput = document.getElementById("date-receipt");
 
 // Hàm để lấy ngày hiện tại theo định dạng YYYY-MM-DD
-function getCurrentDate() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+// function getCurrentDate() {
+//   const today = new Date();
+//   const year = today.getFullYear();
+//   const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
+//   const day = String(today.getDate()).padStart(2, "0");
+//   return `${year}-${month}-${day}`;
+// }
 
 // Gán ngày hiện tại vào thẻ input khi trang được tải lên
-dateInput.value = getCurrentDate();
-
+// dateInput.value = getCurrentDate();
+document.getElementById("date-receipt").addEventListener("change", function() {
+  const selectedDate = this.value;  // Lấy giá trị đã chọn, định dạng YYYY-MM
+  console.log("Selected month and year:", selectedDate);  // Ví dụ: "2024-12"
+});
 // Cập nhật ngày khi người dùng nhấp vào thẻ input
 dateInput.addEventListener("focus", function () {
   dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi

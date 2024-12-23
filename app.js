@@ -132,7 +132,28 @@ app.get("/api/books", (req, res) => {
     }
   });
 });
+app.get('/getBooksByMonth', (req, res) => {
+  const { year, month } = req.query;
 
+  // Truy vấn cơ sở dữ liệu để lấy tổng số lượng sách theo tháng
+  const query = `
+      SELECT Sach.Ten_sach, Sach.The_loai, Sach.Ten_tac_gia, SUM(Chi_tiet_phieu_nhap_sach.So_luong) AS total_quantity
+      FROM Phieu_nhap_sach
+      JOIN Chi_tiet_phieu_nhap_sach ON Phieu_nhap_sach.ID_Phieu = Chi_tiet_phieu_nhap_sach.ID_Phieu
+      JOIN Sach ON Sach.ID_sach = Chi_tiet_phieu_nhap_sach.ID_Sach
+      WHERE YEAR(Phieu_nhap_sach.Ngay_nhap) = ? AND MONTH(Phieu_nhap_sach.Ngay_nhap) = ?
+      GROUP BY Sach.Ten_sach, Sach.The_loai, Sach.Ten_tac_gia
+  `;
+
+  connection.query(query, [year, month], (err, results) => {
+      if (err) {
+          console.error('Error querying data:', err);
+          return res.status(500).send('Error querying database');
+      }
+
+      res.json(results);  // Trả dữ liệu dưới dạng JSON
+  });
+});
 //Route lấy ra thông tin bảng khách hàng
 app.get("/profile", (req, res) => {
   const sql = "SELECT * FROM Khach_hang";
