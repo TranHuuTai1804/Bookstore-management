@@ -84,12 +84,13 @@ function updateInputMinValues() {
 document.addEventListener("DOMContentLoaded", fetchRegulation);
 
 // Toast
-// Lấy tham số 'message' từ query string
 const urlParams = new URLSearchParams(window.location.search);
 const message = urlParams.get("message");
 
 if (message) {
-  const isError = message.toLowerCase().includes("error"); // Kiểm tra nếu thông báo chứa từ 'error'
+  const isError =
+    message.toLowerCase().includes("vượt quá") ||
+    message.toLowerCase().includes("error");
 
   Toastify({
     text: decodeURIComponent(message),
@@ -98,8 +99,8 @@ if (message) {
     gravity: "top",
     position: "right",
     backgroundColor: isError
-      ? "linear-gradient(to right, #ff5f6d, #ffc371)"
-      : "linear-gradient(to right, #00b09b, #96c93d)",
+      ? "linear-gradient(to right, #ff5f6d, #ffc371)" // Màu dành cho lỗi
+      : "linear-gradient(to right, #00b09b, #96c93d)", // Màu dành cho thành công
   }).showToast();
 }
 
@@ -295,13 +296,13 @@ function toggleMenu() {
   }
 }
 
-// Hàm xử lý khi nhấn nút submit (Done)
 async function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
   let hasEmptyField = false;
   let totalQuantity = 0;
 
+  // Lặp qua từng dòng sách trong bảng
   rows.forEach((row) => {
     const cells = row.querySelectorAll("input");
     const bookData = {
@@ -313,71 +314,38 @@ async function submitBooks() {
       price: parseFloat(cells[5].value.trim()) || 0,
     };
 
-    // Kiểm tra các trường dữ liệu có bị bỏ trống không
+    // Kiểm tra nếu bất kỳ trường nào bị bỏ trống
     if (
       !bookData.no ||
       !bookData.name ||
       !bookData.category ||
       !bookData.author ||
-      !bookData.quantity
+      bookData.quantity <= 0
     ) {
       hasEmptyField = true;
     }
 
     totalQuantity += bookData.quantity;
-
     books.push(bookData);
   });
 
-  // Kiểm tra nếu có trường bị thiếu
-  if (hasEmptyField) {
-    showToast("error", "Bạn cần điền đầy đủ thông tin sách.");
-    return;
-  }
-
-  // Lấy giá trị quy định So_luong_ton_it_hon
-  const soLuongTonItNhat = await fetchSoLuongTonItHon();
-
-  // Kiểm tra tổng số lượng có vượt quá quy định không
-  if (totalQuantity > soLuongTonItNhat) {
-    showToast(
-      "error",
-      `Tổng số lượng sách (${totalQuantity}) vượt quá quy định (${soLuongTonItNhat})`
-    );
-    return;
-  }
-
-  console.log("Books data:", books);
-
-  // Hiển thị thông báo thành công
-  showToast("success", "Thông tin sách đã được gửi thành công.");
-
-  // Làm mới bảng sau khi nhấn Done
-  document.getElementById("table-body").innerHTML = ` 
-    <tr>
+  try {
+    // Làm mới bảng sau khi nhấn Done
+    document.getElementById("table-body").innerHTML = `
+      <tr>
         <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
         <td class="nameBook">
-            <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
-            <div class="autocomplete-suggestions" style="display: none;"></div>
+          <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+          <div class="autocomplete-suggestions" style="display: none;"></div>
         </td>
         <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
         <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
         <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
         <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
-    </tr>
-  `;
-}
-
-// Hàm hiển thị thông báo lỗi hoặc thành công bằng Toastify
-function showToast(type, message) {
-  const backgroundColor = type === "success" ? "green" : "red";
-
-  Toastify({
-    text: message,
-    duration: 3000,
-    backgroundColor: backgroundColor,
-    close: true,
-    gravity: "bottom",
-    position: "center",
-  }).showToast();
+      </tr>
+    `;
+  } catch (error) {
+    // Hiển thị lỗi nếu xảy ra vấn đề khi gọi API
+    console.error("Error in submitBooks:", error);
+  }
 }
