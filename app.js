@@ -163,11 +163,8 @@ app.get("/receipts", (req, res) => {
   res.sendFile(join(__dirname, "receipts.html"));
 });
 
-app.get("/report", (req, res, next) => {
-  if (!req.query.date) {
-    return res.sendFile(join(__dirname, "report.html"));
-  }
-  next(); // Chuyển tiếp request đến handler tiếp theo
+app.get("/report", (req, res) => {
+  res.sendFile(join(__dirname, "report.html"));
 });
 
 app.get("/lookup", (req, res) => {
@@ -175,7 +172,7 @@ app.get("/lookup", (req, res) => {
 });
 
 // API để xử lý yêu cầu từ phía client
-app.get('/report', async (req, res) => {
+app.get('/report/inventory', async (req, res) => {
   const { date } = req.query; // Lấy giá trị 'date' từ query string
 
   if (!date) {
@@ -186,7 +183,6 @@ app.get('/report', async (req, res) => {
   try {
     // Thực hiện truy vấn
     const [year, month, day] = date.split('-'); // Tách date theo dấu '-'
-    // Thực hiện truy vấn
     const [rows, fields] = await new Promise((resolve, reject) => {
       connection.query(
         `
@@ -265,6 +261,74 @@ LEFT JOIN Thong_ke_ban_trong_ky Tong_ban_trong_ky ON s.ID_Sach = Tong_ban_trong_
     res.status(500).json({ error: 'Đã có lỗi xảy ra trong quá trình truy vấn dữ liệu.' });
   }
 });
+
+app.get('/report/debt', async (req, res) => {
+  const { date } = req.query;  // Lấy ngày từ query param (MM/YYYY)
+  const [year, month, day] = date.split('-'); // Tách date theo dấu '-'
+  const endDatePrevMonth = date;  // Ngày cuối tháng trước
+  try {
+    // Tính công nợ đầu kỳ
+    const debtStartQuery = `
+      SELECT 
+        kh.ID_Khach_hang,
+        kh.Ten_khach_hang,
+        COALESCE(SUM(pt.So_tien), 0) AS Tong_thu_tien,
+        COALESCE(SUM(hd.Tong_tien), 0) AS Tong_hoa_don,
+        (COALESCE(SUM(pt.So_tien), 0) - COALESCE(SUM(hd.Tong_tien), 0)) AS Cong_no_dau_ky
+      FROM Khach_hang kh
+      LEFT JOIN Phieu_thu_tien pt ON kh.ID_Khach_hang = pt.ID_Khach_hang AND pt.Ngay_thu_tien < ?
+      LEFT JOIN Hoa_don_ban_sach hd ON kh.ID_Khach_hang = hd.ID_khach_hang AND hd.Ngay_lap_hoa_don < ?
+      GROUP BY kh.ID_Khach_hang, kh.Ten_khach_hang;
+    `;
+
+    // Query MySQL sử dụng các tham số truyền vào
+    const [debtStartResult] = await connection.promise().query(debtStartQuery, [endDatePrevMonth, endDatePrevMonth]);
+
+    // Tính phát sinh công nợ trong kỳ (trong tháng)
+    const debtCurrentQuery = `
+      SELECT 
+        kh.ID_Khach_hang,
+        kh.Ten_khach_hang,
+        COALESCE(SUM(pt.So_tien), 0) AS Tong_thu_tien,
+        COALESCE(SUM(hd.Tong_tien), 0) AS Tong_hoa_don,
+        (COALESCE(SUM(pt.So_tien), 0) - COALESCE(SUM(hd.Tong_tien), 0)) AS Cong_no_phat_sinh
+      FROM Khach_hang kh
+      LEFT JOIN Phieu_thu_tien pt ON kh.ID_Khach_hang = pt.ID_Khach_hang AND MONTH(pt.Ngay_thu_tien) = ? AND YEAR(pt.Ngay_thu_tien) = ?
+      LEFT JOIN Hoa_don_ban_sach hd ON kh.ID_Khach_hang = hd.ID_khach_hang AND MONTH(hd.Ngay_lap_hoa_don) = ? AND YEAR(hd.Ngay_lap_hoa_don) = ?
+      GROUP BY kh.ID_Khach_hang, kh.Ten_khach_hang;
+    `;
+
+    // Query MySQL sử dụng các tham số truyền vào
+    const [debtCurrentResult] = await connection.promise().query(debtCurrentQuery, [month, year, month, year]);
+
+    // Tính công nợ cuối kỳ: cộng công nợ đầu kỳ và phát sinh trong kỳ
+    const debtEndResult = debtStartResult.map((start) => {
+      const current = debtCurrentResult.find(
+        (item) => item.ID_Khach_hang === start.ID_Khach_hang
+      );
+      const debtEnd = current
+        ? start.Cong_no_dau_ky + current.Cong_no_phat_sinh
+        : start.Cong_no_dau_ky;
+      return {
+        ID_Khach_hang: start.ID_Khach_hang,
+        Ten_khach_hang: start.Ten_khach_hang,
+        Cong_no_dau_ky: start.Cong_no_dau_ky,
+        Cong_no_cuoi_ky: debtEnd,
+        Tong_thu_tien: current ? current.Tong_thu_tien : 0,  // Tổng tiền thu trong kỳ
+        Tong_hoa_don: current ? current.Tong_hoa_don : 0    // Tổng tiền hóa đơn trong kỳ
+      };
+    });
+
+    // Trả về dữ liệu
+    console.log(debtEndResult);
+    res.json(debtEndResult);
+
+  } catch (error) {
+    console.error('Lỗi khi lấy công nợ:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Khởi động server
 app.listen(port, () => {
