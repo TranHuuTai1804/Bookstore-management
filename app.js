@@ -447,27 +447,112 @@ app.get("/receipts", (req, res) => {
   res.sendFile(join(__dirname, "receipts.html"));
 });
 
-app.get("/report", (req, res) => {
-  res.sendFile(join(__dirname, "report.html"));
+app.get("/report", (req, res, next) => {
+  if (!req.query.date) {
+    return res.sendFile(join(__dirname, "report.html"));
+  }
+  next(); // Chuyển tiếp request đến handler tiếp theo
 });
 
 app.get("/lookup", (req, res) => {
   res.sendFile(join(__dirname, "lookup.html"));
 });
 
-app.get("/edit", (req, res) => {
-  res.sendFile(join(__dirname, "edit.html"));
-});
+// API để xử lý yêu cầu từ phía client
+app.get('/report', async (req, res) => {
+  const { date } = req.query; // Lấy giá trị 'date' từ query string
 
-app.get("/customer", (req, res) => {
-  res.sendFile(join(__dirname, "customer.html"));
-});
+  if (!date) {
+    // Nếu không có ngày trong query string, trả lỗi
+    return res.status(400).json({ error: 'Ngày không được cung cấp.' });
+  }
 
-app.get("/staff", (req, res) => {
-  res.sendFile(join(__dirname, "staff.html"));
+  try {
+    // Thực hiện truy vấn
+    const [year, month, day] = date.split('-'); // Tách date theo dấu '-'
+    // Thực hiện truy vấn
+    const [rows, fields] = await new Promise((resolve, reject) => {
+      connection.query(
+        `
+    -- Tính toán tồn đầu kỳ, nhập trong kỳ, bán trong kỳ, và tồn cuối kỳ
+    WITH Thong_ke_nhap_truoc AS (
+      -- Tổng nhập trước ngày đầu tháng
+      SELECT s.ID_Sach, COALESCE(SUM(ct.So_luong), 0) AS Tong_nhap_truoc
+      FROM Sach s
+      LEFT JOIN Chi_tiet_phieu_nhap_sach ct ON s.ID_Sach = ct.ID_Sach
+      LEFT JOIN Phieu_nhap_sach pn ON ct.ID_Phieu = pn.ID_Phieu
+      WHERE pn.Ngay_nhap < DATE(CONCAT(?, '-', ?, '-01'))
+      GROUP BY s.ID_Sach
+    ),
+    Thong_ke_ban_truoc AS (
+      -- Tổng bán trước ngày đầu tháng
+      SELECT s.ID_Sach, COALESCE(SUM(cthd.So_luong), 0) AS Tong_ban_truoc
+      FROM Sach s
+      LEFT JOIN Chi_tiet_hoa_don cthd ON s.ID_Sach = cthd.ID_Sach
+      LEFT JOIN Hoa_don_ban_sach hd ON cthd.ID_Hoa_don = hd.ID_Hoa_don
+      WHERE hd.Ngay_lap_hoa_don < DATE(CONCAT(?, '-', ?, '-01'))
+      GROUP BY s.ID_Sach
+    ),
+    Thong_ke_nhap_trong_ky AS (
+      -- Tổng nhập trong kỳ
+      SELECT s.ID_Sach, COALESCE(SUM(ct.So_luong), 0) AS Tong_nhap
+      FROM Sach s
+      LEFT JOIN Chi_tiet_phieu_nhap_sach ct ON s.ID_Sach = ct.ID_Sach
+      LEFT JOIN Phieu_nhap_sach pn ON ct.ID_Phieu = pn.ID_Phieu
+      WHERE MONTH(pn.Ngay_nhap) = ? AND YEAR(pn.Ngay_nhap) = ?
+      GROUP BY s.ID_Sach
+    ),
+    Thong_ke_ban_trong_ky AS (
+      -- Tổng bán trong kỳ
+      SELECT s.ID_Sach, COALESCE(SUM(cthd.So_luong), 0) AS Tong_ban
+      FROM Sach s
+      LEFT JOIN Chi_tiet_hoa_don cthd ON s.ID_Sach = cthd.ID_Sach
+      LEFT JOIN Hoa_don_ban_sach hd ON cthd.ID_Hoa_don = hd.ID_Hoa_don
+      WHERE MONTH(hd.Ngay_lap_hoa_don) = ? AND YEAR(hd.Ngay_lap_hoa_don) = ?
+      GROUP BY s.ID_Sach
+    )
+SELECT 
+  s.ID_Sach,
+  s.Ten_Sach,
+  s.So_luong,
+  COALESCE(Tong_nhap_truoc.Tong_nhap_truoc, 0) AS Tong_nhap_truoc,
+  COALESCE(Tong_ban_truoc.Tong_ban_truoc, 0) AS Tong_ban_truoc,
+  COALESCE(Tong_nhap_trong_ky.Tong_nhap, 0) AS Tong_nhap,
+  COALESCE(Tong_ban_trong_ky.Tong_ban, 0) AS Tong_ban,
+  -- Tính tồn đầu kỳ tháng 2 dựa trên tồn cuối kỳ tháng 1
+  (COALESCE(s.So_luong, 0) 
+    + COALESCE(Tong_nhap_truoc.Tong_nhap_truoc, 0) 
+    - COALESCE(Tong_ban_truoc.Tong_ban_truoc, 0)) AS Ton_dau_ky,
+  -- Tính tồn cuối kỳ tháng 2
+  (COALESCE(s.So_luong, 0) 
+    + COALESCE(Tong_nhap_truoc.Tong_nhap_truoc, 0) 
+    - COALESCE(Tong_ban_truoc.Tong_ban_truoc, 0)
+    + COALESCE(Tong_nhap_trong_ky.Tong_nhap, 0)
+    - COALESCE(Tong_ban_trong_ky.Tong_ban, 0)) AS Ton_cuoi_ky
+FROM Sach s
+LEFT JOIN Thong_ke_nhap_truoc Tong_nhap_truoc ON s.ID_Sach = Tong_nhap_truoc.ID_Sach
+LEFT JOIN Thong_ke_ban_truoc Tong_ban_truoc ON s.ID_Sach = Tong_ban_truoc.ID_Sach
+LEFT JOIN Thong_ke_nhap_trong_ky Tong_nhap_trong_ky ON s.ID_Sach = Tong_nhap_trong_ky.ID_Sach
+LEFT JOIN Thong_ke_ban_trong_ky Tong_ban_trong_ky ON s.ID_Sach = Tong_ban_trong_ky.ID_Sach;
+    `,
+        [year, month, year, month, month, year, month, year],
+        (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+          res.json(results); // Trả về kết quả dưới dạng JSON
+        }
+      );
+    });
+
+  } catch (error) {
+    console.error('Lỗi truy vấn:', error);
+    res.status(500).json({ error: 'Đã có lỗi xảy ra trong quá trình truy vấn dữ liệu.' });
+  }
 });
 
 // Khởi động server
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
+
+

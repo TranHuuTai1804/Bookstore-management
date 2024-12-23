@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Report Monthly</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/home.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
+
 <body>
     <header class="header">
         <div class="navbar">
@@ -33,7 +39,7 @@
     </div>
 
     <div class="rp-title">
-        <button class="title-btn active" id="enventory-btn" onclick="showTable('enventory')">enventory Report</button>
+        <button class="title-btn active" id="Inventory-btn" onclick="showTable('Inventory')">Inventory Report</button>
         <button class="title-btn" id="debt-btn" onclick="showTable('debt')">Debt Report</button>
     </div>
 
@@ -41,58 +47,64 @@
     <div class="date">
         <h3>Date report:</h3>
         <div class="date-picker">
-            <!-- Thay đổi type thành month để người dùng chọn tháng và năm -->
-            <input type="month" id="date-receipt" placeholder="Select Month and Year" required>
-            <img src="/img/calendar.svg" alt="Calendar Icon" id="calendar-icon">
+            <input type="text" id="date-report" placeholder="MM/YYYY">
+            <a id="get-date"><img src="/img/calendar.svg" alt="Calendar Icon" id="calendar-icon"></a>
         </div>
+        <a class="print-report" onclick="window.print()"><i class="fa fa-print" aria-hidden="true"
+                style="font-size: 36px;"></i></a>
     </div>
 
-    <!-- Bảng -->
-   <!-- enventory Table -->
-<div class="date-section" id="enventory-table">
-    <table class="table-container">
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Book</th>
-                <th>First Existence</th>
-                <th>Arise</th>
-                <th>Last Existence</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">  
-            <tr>
-              <!-- Danh sach sẽ hiện ở đây -->
-            </tr>
-        </tbody>
-    </table>
-    <button class="add-row-btn" onclick="addRow()">+</button>
-</div>
 
-<!-- Debt Table -->
-<div class="date-section" id="debt-table" style="display: none;">
-    <table class="table-container">
-        <thead>
-            <tr>
-                <th>No.</th>
-                <th>Guest Name</th>
-                <th>First Debt</th>
-                <th>Arise</th>
-                <th>Last Debt</th>
-            </tr>
-        </thead>
-        <tbody id="table-body-debt">
-            <tr>
-                <td><input type="text" name="no1" placeholder="No." required></td>
-                <td><input type="text" name="guest1" placeholder="Guest Name" required></td>
-                <td><input type="text" name="first-debt1" placeholder="First Debt" required></td>
-                <td><input type="text" name="arise1" placeholder="Arise"></td>
-                <td><input type="text" name="last-debt1" placeholder="Last Debt" required></td>
-            </tr>
-        </tbody>
-    </table>
-    <button class="add-row-btn" onclick="addRow()">+</button>
-</div>
+    <!-- Bảng -->
+    <!-- Inventory Table -->
+    <div class="date-section" id="Inventory-table">
+        <table class="table-container">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Book</th>
+                    <th>First Existence</th>
+                    <th>Arise</th>
+                    <th>Last Existence</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr>
+                    <td><input type="text" name="no1" placeholder="No."></td>
+                    <td><input type="text" name="book1" placeholder="Book Name"></td>
+                    <td><input type="text" name="first-Existence1" placeholder="First Existence"></td>
+                    <td><input type="text" name="arise1" placeholder="Arise"></td>
+                    <td><input type="text" name="last-Existence1" placeholder="Last Existence"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addRow()">+</button>
+    </div>
+
+    <!-- Debt Table -->
+    <div class="date-section" id="debt-table" style="display: none;">
+        <table class="table-container">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Guest Name</th>
+                    <th>First Debt</th>
+                    <th>Arise</th>
+                    <th>Last Debt</th>
+                </tr>
+            </thead>
+            <tbody id="table-body-debt">
+                <tr>
+                    <td><input type="text" name="no1" placeholder="No."></td>
+                    <td><input type="text" name="guest1" placeholder="Guest Name"></td>
+                    <td><input type="text" name="first-debt1" placeholder="First Debt"></td>
+                    <td><input type="text" name="arise1" placeholder="Arise"></td>
+                    <td><input type="text" name="last-debt1" placeholder="Last Debt"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="add-row-btn" onclick="addRow()">+</button>
+    </div>
     <button class="done-btn" onclick="submitBooks()">Done</button>
 
     <button class="open-menu" onclick="toggleMenu()">></button>
@@ -110,11 +122,12 @@
         <button><a href="/edit">Edit Regulations</a></button>
     </div>
 
-    <!-- Toast thông báo -->
-    <div id="toastSuccess" class="toast">Lập biên lai thành công !!!</div>
-    <div id="toastError" class="toastError">Lập biên lai thất bại! , còn mục chưa nhập.</div>
+        <!-- Toasts -->
+    <div id="toastSuccess" class="toast">Định dạng đúng</div>
+    <div id="toastError" class="toast">Định dạng không hợp lệ. Vui lòng nhập MM/YYYY.</div>
 
 </body>
-    <script src="/js/report.js">
-    </script>
+<script src="js/report.js">
+</script>
+
 </html>
