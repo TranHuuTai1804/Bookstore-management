@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.getElementById("table-body");
 
-  // Function to fetch customer data from the server
   const fetchCustomers = async () => {
     try {
       const response = await fetch("/profile");
@@ -15,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Function to populate the table with customer data
   const populateTable = (customers) => {
     tableBody.innerHTML = ""; // Clear existing rows
 

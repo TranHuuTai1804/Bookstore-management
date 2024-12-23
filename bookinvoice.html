@@ -36,9 +36,10 @@
     <div class="customer-section">
         <div class="customer">
             <h3>Customer:</h3>
-            <input type="text" id="customer-name" placeholder="Customer Name" oninput="showSuggestions(this)">
+            <input type="text" id="customer-name" placeholder="Customer Name" oninput="showCustomerSuggestions(this)">
             <div class="autocomplete-suggestions nameCustomer" style="display: none;"></div>
-        </div>
+          </div>
+          
     
         <div class="date">
             <h3>Date:</h3>
@@ -64,14 +65,14 @@
             <tbody id="table-body">
                 <!-- Dòng 1, nhập liệu -->
                 <tr>
-                    <td><input type="text" name="id" id="idInput" placeholder="ID" required></td>
-                    <td class="nameBook">
-                        <input name="book" type="text" id="book-name" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
-                        <div class="autocomplete-suggestions" style="display: none;"></div>
-                    </td>
-                    <td><input type="text" name="category" placeholder="Category" id="categoryInput" required></td>
-                    <td><input type="number" name="quantity" placeholder="Quantity" oninput="calculatePrice(this)" required></td>
-                    <td><input type="text" name="price" placeholder="Price" id="priceInput" required></td>
+                    <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
+                        <td class="nameBook">
+                            <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+                            <div class="autocomplete-suggestions" style="display: none;"></div>
+                        </td>
+                        <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
+                        <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required data-regulation oninput="calculatePrice(this)" ></td>
+                        <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
                 </tr>
             </tbody>
         </table>
@@ -86,7 +87,7 @@
 
     <!-- Menu Section -->
     <div id="hero-menu" class="menu-ovl" style="display: none;">
-        <button><a href="/bookempty">Book Entry Form</a></button>
+        <button><a href="/bookempty">Book Emtry Form</a></button>
         <button><a href="/bookinvoice">Book Invoice</a></button>
         <button><a href="lookup">Book Lookup</a></button>
         <button><a href="/receipts">Receipt</a></button>

@@ -1,3 +1,88 @@
+// Hàm lấy giá trị So_luong_ton_it_nhat từ server
+async function fetchSoLuongTonItHon() {
+  try {
+    const response = await fetch("/regulation");
+    if (!response.ok) {
+      throw new Error("Failed to fetch regulation");
+    }
+    const regulations = await response.json();
+    const soLuongTonItHon = regulations?.[0]?.So_luong_ton_it_hon;
+
+    // console.log(soLuongTonItHon);
+
+    if (soLuongTonItHon !== undefined) {
+      return soLuongTonItHon;
+    } else {
+      console.error("Không tìm thấy giá trị So_luong_ton_it_hon");
+      return 0; // Hoặc một giá trị mặc định nếu không có
+    }
+  } catch (error) {
+    console.error("Error fetching So_luong_ton_it_nhat:", error);
+    return 0; // Giá trị mặc định nếu có lỗi
+  }
+}
+
+let minInput = [];
+let isMinEnabled = false;
+
+// Tải quy định từ server
+async function fetchRegulation() {
+  try {
+    const response = await fetch("/regulation");
+    if (!response.ok) throw new Error("Failed to fetch regulations");
+
+    const regulations = await response.json();
+
+    // Xác định trạng thái quy định và cập nhật giá trị
+    processRegulations(regulations);
+
+    // Cập nhật input sau khi xử lý xong quy định
+    updateInputMinValues();
+  } catch (error) {
+    console.error("Error fetching regulations:", error);
+  }
+}
+
+// Xử lý dữ liệu quy định
+function processRegulations(regulations) {
+  // Kiểm tra xem có quy định hợp lệ không
+  if (!regulations || !Array.isArray(regulations) || regulations.length === 0) {
+    console.warn("No regulations found"); // Cảnh báo khi không có dữ liệu quy định
+    isMinEnabled = false; // Tắt quy định
+    minInput = []; // Đặt lại mảng minInput
+    return;
+  }
+
+  // Kiểm tra giá trị Su_Dung_QD4
+  const suDungQD4 = regulations[0]?.Su_Dung_QD4?.data?.[0];
+
+  // Kiểm tra nếu Su_Dung_QD4 = 0
+  isMinEnabled = Number(suDungQD4) !== 0;
+
+  if (isMinEnabled) {
+    minInput = regulations.map((reg) => reg.So_luong_nhap_it_nhat);
+    console.log("Quy định nhập tối thiểu được bật:", minInput);
+  } else {
+    console.log("Quy định nhập tối thiểu đang tắt.");
+    minInput = []; // Làm rỗng mảng minInput khi tắt quy định
+  }
+}
+
+// Cập nhật giá trị min cho các input
+function updateInputMinValues() {
+  const inputs = document.querySelectorAll("input[data-regulation]");
+  inputs.forEach((input, index) => {
+    if (isMinEnabled && minInput[index] !== undefined) {
+      input.min = minInput[index];
+    } else {
+      input.removeAttribute("min");
+    }
+  });
+}
+
+// Gọi hàm tải quy định khi trang được tải
+document.addEventListener("DOMContentLoaded", fetchRegulation);
+
 // Toast
 // Lấy tham số 'message' từ query string
 const urlParams = new URLSearchParams(window.location.search);
@@ -38,7 +123,7 @@ async function fetchBookTitles() {
       Gia: book.Gia,
     }));
 
-    console.log("Danh sách sách hiện tại:", booksList);
+    // console.log("Danh sách sách hiện tại:", booksList);
   } catch (error) {
     console.error("Error fetching books:", error);
   }
@@ -178,26 +263,6 @@ document.addEventListener("click", function (e) {
   }
 });
 
-// Lấy thẻ input ngày
-const dateInput = document.getElementById("date-receipt");
-
-// Hàm để lấy ngày hiện tại theo định dạng YYYY-MM-DD
-function getCurrentDate() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Gán ngày hiện tại vào thẻ input khi trang được tải lên
-dateInput.value = getCurrentDate();
-
-// Cập nhật ngày khi người dùng nhấp vào thẻ input
-dateInput.addEventListener("focus", function () {
-  dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
-});
-
 // Hàm toggle menu
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");
@@ -230,11 +295,12 @@ function toggleMenu() {
   }
 }
 
-// Hàm xử lý khi nhấn nút Done với id duy nhất cho từng ô input
-function submitBooks() {
+// Hàm xử lý khi nhấn nút submit (Done)
+async function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
   let hasEmptyField = false;
+  let totalQuantity = 0;
 
   rows.forEach((row) => {
     const cells = row.querySelectorAll("input");
@@ -243,9 +309,11 @@ function submitBooks() {
       name: cells[1].value.trim(),
       category: cells[2].value.trim(),
       author: cells[3].value.trim(),
-      quantity: cells[4].value.trim(),
+      quantity: parseInt(cells[4].value.trim()) || 0,
+      price: parseFloat(cells[5].value.trim()) || 0,
     };
 
+    // Kiểm tra các trường dữ liệu có bị bỏ trống không
     if (
       !bookData.no ||
       !bookData.name ||
@@ -255,45 +323,61 @@ function submitBooks() {
     ) {
       hasEmptyField = true;
     }
+
+    totalQuantity += bookData.quantity;
+
     books.push(bookData);
   });
 
+  // Kiểm tra nếu có trường bị thiếu
   if (hasEmptyField) {
-    showToast("error");
+    showToast("error", "Bạn cần điền đầy đủ thông tin sách.");
+    return;
+  }
+
+  // Lấy giá trị quy định So_luong_ton_it_hon
+  const soLuongTonItNhat = await fetchSoLuongTonItHon();
+
+  // Kiểm tra tổng số lượng có vượt quá quy định không
+  if (totalQuantity > soLuongTonItNhat) {
+    showToast(
+      "error",
+      `Tổng số lượng sách (${totalQuantity}) vượt quá quy định (${soLuongTonItNhat})`
+    );
     return;
   }
 
   console.log("Books data:", books);
 
-  showToast("success");
+  // Hiển thị thông báo thành công
+  showToast("success", "Thông tin sách đã được gửi thành công.");
 
   // Làm mới bảng sau khi nhấn Done
-  document.getElementById("table-body").innerHTML = `
-        <tr>
-            <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
-      <td class="nameBook">
-          <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
-          <div class="autocomplete-suggestions" style="display: none;"></div>
-      </td>
-      <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
-      <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
-      <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
-      <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
-        </tr>
-    `;
+  document.getElementById("table-body").innerHTML = ` 
+    <tr>
+        <td><input type="text" name="id[]" placeholder="ID" class="book-no" required></td>
+        <td class="nameBook">
+            <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+            <div class="autocomplete-suggestions" style="display: none;"></div>
+        </td>
+        <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
+        <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
+        <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
+        <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
+    </tr>
+  `;
 }
 
-// Hiển thị toast
-function showToast(type) {
-  // Lấy phần tử toast tương ứng
-  const toast =
-    type === "success"
-      ? document.getElementById("toastSuccess")
-      : document.getElementById("toastError");
+// Hàm hiển thị thông báo lỗi hoặc thành công bằng Toastify
+function showToast(type, message) {
+  const backgroundColor = type === "success" ? "green" : "red";
 
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
+  Toastify({
+    text: message,
+    duration: 3000,
+    backgroundColor: backgroundColor,
+    close: true,
+    gravity: "bottom",
+    position: "center",
+  }).showToast();
 }

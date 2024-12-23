@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "20082004",
   database: "QLNhasach",
 });
 
@@ -226,6 +226,12 @@ app.post("/addBook", async (req, res) => {
       price: req.body.price[index],
     }));
 
+    console.log("Books:", books);
+    console.log(
+      "Quantity:",
+      books.map((book) => book.quantity)
+    );
+
     for (const book of books) {
       const rows = await runQuery(
         `SELECT ID_sach, So_luong FROM Sach
@@ -256,7 +262,6 @@ app.post("/addBook", async (req, res) => {
         );
       }
     }
-
     res.redirect("/bookempty?message=Book+added+successfully");
   } catch (error) {
     console.error(error);
