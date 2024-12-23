@@ -227,13 +227,28 @@ document.getElementById("get-date").addEventListener("click", async (event) => {
   // Lấy giá trị từ input date-report
   const dateInput = document.getElementById("date-report").value.trim();
   const regex = /^(0[1-9]|1[0-2])\/\d{4}$/; // Kiểm tra định dạng MM/YYYY
+  const InventoryBtn = document.getElementById("Inventory-btn");
 
   if (regex.test(dateInput)) {
-    const [month, year] = dateInput.split('/');
+    const [month, year] = dateInput.split('/'); // Tách tháng và năm
     const startDate = `${year}-${month}-01`; // Chuyển đổi thành định dạng YYYY-MM-01
+
+    // Kiểm tra xem bảng Inventory có đang active không
+    const isInventoryActive = InventoryBtn.classList.contains("active");
+
     try {
+      let url = "";
+
+      if (isInventoryActive) {
+        // Nếu Inventory đang active, gọi hàm fetch với URL cho Inventory
+        url = `/report/inventory?date=${startDate}`;
+      } else {
+        // Nếu không, gọi hàm fetch với URL cho Debt (hoặc hàm khác tùy ý)
+        url = `/report/debt?date=${startDate}`;
+      }
+
       // Gửi yêu cầu GET đến API server với tham số date
-      const response = await fetch(`/report?date=${startDate}`);
+      const response = await fetch(url);
 
       if (!response.ok) {
         console.error('Lỗi từ server:', response.statusText);
@@ -241,8 +256,12 @@ document.getElementById("get-date").addEventListener("click", async (event) => {
       }
 
       const data = await response.json(); // Parse JSON từ phản hồi server
-      populateTable(data); // Gọi hàm populateTable để hiển thị dữ liệu
-
+      if (isInventoryActive) {
+        populateTable(data, "Inventory"); // Gọi hàm populateTable để hiển thị dữ liệu
+      }
+      else {
+        populateTable(data, "debt");
+      }
       showToast("success"); // Hiển thị toast thành công
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu:', error.message);
@@ -252,42 +271,68 @@ document.getElementById("get-date").addEventListener("click", async (event) => {
     showToast("error"); // Hiển thị toast lỗi nếu định dạng không hợp lệ
   }
 });
+
 // Hàm hiển thị dữ liệu lên bảng
 // Hàm hiển thị dữ liệu lên bảng
-function populateTable(data) {
+function populateTable(data, type) {
   const tableBody = document.getElementById("table-body");
+  const tableBodyDebt = document.getElementById("table-body-debt");
 
   // Xóa nội dung bảng trước khi thêm dữ liệu mới
   tableBody.innerHTML = "";
+  tableBodyDebt.innerHTML = "";
 
   // Kiểm tra nếu dữ liệu không phải là mảng
   if (!Array.isArray(data)) {
     console.warn("Dữ liệu không phải mảng, chuyển thành mảng:", data);
     data = data ? [data] : []; // Nếu data không hợp lệ, chuyển thành mảng rỗng
   }
-  
+
   // Hiển thị dữ liệu trong bảng
   data.forEach(row => {
-    // Kiểm tra các giá trị trong row trước khi sử dụng
-    const idSach = row.ID_Sach || "N/A";  // Nếu ID_Sach không hợp lệ, gán "N/A"
-    const tenSach = row.Ten_Sach || "Không có tên";  // Nếu Ten_Sach không hợp lệ, gán "Không có tên"
-
-    // Chuyển đổi các giá trị sang số
-    const tonDauKy = parseInt(row.Ton_dau_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
-    const tongNhap = parseInt(row.Tong_nhap) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
-    const tongBan = parseInt(row.Tong_ban) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
-    const tonCuoiKy = parseInt(row.Ton_cuoi_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
-
     // Tạo dòng mới trong bảng
     const newRow = document.createElement("tr");
-    newRow.innerHTML = `
-      <td>${idSach}</td>
-      <td>${tenSach}</td>
-      <td>${tonDauKy}</td>
-      <td>${tongNhap - tongBan}</td>
-      <td>${tonCuoiKy}</td>
-    `;
-    tableBody.appendChild(newRow);
+
+    // Nếu là bảng Inventory
+    if (type === "Inventory") {
+      // Kiểm tra các giá trị trong row trước khi sử dụng
+      const idSach = row.ID_Sach || "N/A";  // Nếu ID_Sach không hợp lệ, gán "N/A"
+      const tenSach = row.Ten_Sach || "Không có tên";  // Nếu Ten_Sach không hợp lệ, gán "Không có tên"
+
+      // Chuyển đổi các giá trị sang số
+      const tonDauKy = parseInt(row.Ton_dau_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+      const tongNhap = parseInt(row.Tong_nhap) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+      const tongBan = parseInt(row.Tong_ban) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+      const tonCuoiKy = parseInt(row.Ton_cuoi_ky) || 0;  // Chuyển thành số, nếu không hợp lệ gán 0
+
+      newRow.innerHTML = `
+        <td>${idSach}</td>
+        <td>${tenSach}</td>
+        <td>${tonDauKy}</td>
+        <td>${tongNhap - tongBan}</td>
+        <td>${tonCuoiKy}</td>
+      `;
+      tableBody.appendChild(newRow);
+    }
+    // Nếu là bảng Debt
+    else if (type === "debt") {
+      const idKH = row.ID_Khach_hang || "N/A";  // Nếu ID_Khach_hang không hợp lệ, gán "N/A"
+      const tenKH = row.Ten_khach_hang || "Không có tên";  // Nếu Ten_Khach_hang không hợp lệ, gán "Không có tên"
+
+      const noDauKy = parseInt(row.Cong_no_dau_ky) || 0; // Giá trị nợ đầu kỳ
+      const Tongthuthang = parseInt(row.Tong_thu_tien); 
+      const Tonghoadonthang = parseInt(row.Tong_hoa_don);
+
+      newRow.innerHTML = `
+        <td>${idKH}</td>
+        <td>${tenKH}</td>
+        <td>${noDauKy}</td>
+        <td>${Tongthuthang - Tonghoadonthang}</td>
+        <td>${noDauKy + Tongthuthang - Tonghoadonthang}</td>
+      `;
+      tableBodyDebt.appendChild(newRow);
+    }
+
   });
 }
 
