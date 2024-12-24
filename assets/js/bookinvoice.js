@@ -231,6 +231,21 @@ function calculatePrice(inputElement) {
     selectedBook && quantity > 0 ? selectedBook.Gia * quantity : "";
 }
 
+//Xoá dòng
+function deleteRow() {
+  const tableBody = document.getElementById("table-body");
+
+  // Kiểm tra nếu bảng có ít nhất một hàng
+  if (tableBody.children.length > 0) {
+    // Xoá hàng cuối cùng
+    tableBody.removeChild(tableBody.lastElementChild);
+  } else {
+    // Hiển thị thông báo nếu không còn hàng
+    alert("Không còn hàng nào để xoá!");
+  }
+}
+
+//Thêm dòng
 function addRow() {
   const tableBody = document.getElementById("table-body");
 

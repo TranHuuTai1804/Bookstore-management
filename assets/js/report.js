@@ -86,6 +86,33 @@ menuOv.addEventListener("scroll", function () {
   }, 100); // Ẩn thanh cuộn khi lướt và hiển thị lại sau khi ngừng
 });
 
+// Hàm xóa dòng cuối cùng trong bảng
+function deleteRow() {
+  // Kiểm tra bảng đang hiển thị
+  const enventoryTable = document.getElementById("enventory-table");
+  const debtTable = document.getElementById("debt-table");
+
+  if (enventoryTable.style.display === "block") {
+    // Xóa dòng cuối cùng của bảng enventory
+    const tableBody = document.getElementById("table-body");
+
+    if (tableBody.children.length > 0) {
+      tableBody.removeChild(tableBody.lastElementChild);
+    } else {
+      alert("Không còn dòng nào để xóa trong bảng enventory!");
+    }
+  } else if (debtTable.style.display === "block") {
+    // Xóa dòng cuối cùng của bảng debt
+    const tableBodyDebt = document.getElementById("table-body-debt");
+
+    if (tableBodyDebt.children.length > 0) {
+      tableBodyDebt.removeChild(tableBodyDebt.lastElementChild);
+    } else {
+      alert("Không còn dòng nào để xóa trong bảng debt!");
+    }
+  }
+}
+
 // Hàm thêm dòng mới vào bảng
 function addRow() {
   // Kiểm tra bảng đang hiển thị

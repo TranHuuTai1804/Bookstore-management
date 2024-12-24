@@ -280,23 +280,111 @@ async function filterByCategory(category, button) {
     bookContainer.appendChild(table);
 
     // Cập nhật nút active
-    updateActiveButton(button);
   } catch (error) {
     console.error("Error fetching books by category:", error);
   }
 }
 
-// Hàm cập nhật trạng thái nút active
-function updateActiveButton(button) {
-  // Xóa class active khỏi tất cả nút
-  const buttons = document.querySelectorAll(".filter-btn");
-  buttons.forEach((btn) => btn.classList.remove("active"));
+// Hàm để tải danh sách tác giả từ server và hiển thị trong dropdown
+function loadAuthors() {
+  // Giả sử bạn có một API để lấy danh sách tác giả
+  fetch("/api/books")
+    .then((response) => response.json())
+    .then((authors) => {
+      const authorDropdown = document.getElementById("authorDropdown");
+      authorDropdown.innerHTML = ""; // Xóa danh sách cũ
 
-  // Gán class active cho nút hiện tại
-  if (button) {
-    button.classList.add("active");
+      authors.forEach((author) => {
+        const authorButton = document.createElement("button");
+        authorButton.classList.add("filter-btn");
+        authorButton.textContent = author.Ten_tac_gia;
+        authorButton.onclick = () => selectAuthor(author.Ten_tac_gia); // Gọi selectAuthor khi nhấp vào tác giả
+        authorDropdown.appendChild(authorButton);
+      });
+    })
+    .catch((error) => console.error("Lỗi khi lấy danh sách tác giả:", error));
+}
+
+// Hàm toggle dropdown cho tác giả
+function toggleAuthorDropdown() {
+  const authorDropdown = document.getElementById("authorDropdown");
+  authorDropdown.classList.toggle("show"); // Thêm hoặc xóa lớp 'show' để hiển thị/ẩn dropdown
+}
+
+// Hàm chọn tác giả và hiển thị tên tác giả đã chọn
+async function selectAuthor(authorName) {
+  // Đóng dropdown khi đã chọn tác giả
+  const authorDropdown = document.getElementById("authorDropdown");
+  authorDropdown.classList.remove("show");
+
+  // Gọi API để lấy tất cả sách
+  try {
+    const response = await fetch("/api/books");
+    if (!response.ok) {
+      throw new Error("Failed to fetch books");
+    }
+    const books = await response.json();
+
+    // Lọc sách theo tác giả đã chọn
+    const filteredBooks = books.filter(
+      (book) => book.Ten_tac_gia === authorName
+    );
+
+    // Lấy giá trị So_luong_ton_it_nhat từ quy định
+    const soLuongTonItHon = await fetchSoLuongTonItHon();
+
+    // Hiển thị danh sách sách của tác giả
+    const bookContainer = document.querySelector(".book-container");
+    bookContainer.innerHTML = ""; // Xóa nội dung cũ nếu có
+
+    filteredBooks.forEach((book) => {
+      const bookItem = document.createElement("div");
+      bookItem.className = "book-item";
+      bookItem.innerHTML = `
+        <img src="${book.img || "/book/book1.png"}" alt="${
+        book.Ten_sach
+      }" class="book-image">
+        <h3 class="book-title">${book.Ten_sach}</h3>
+        <p class="book-price">$${book.Gia}</p>
+        <div class="progress-container">
+          <span class="progress-text">${book.So_luong}/${soLuongTonItHon}</span>
+          <div class="progress-bar" style="width: ${
+            (book.So_luong / soLuongTonItHon) * 100
+          }%;"></div>
+        </div>
+      `;
+
+      // Thêm sự kiện click để hiển thị chi tiết sách khi người dùng click vào sách
+      bookItem.addEventListener("click", () => selectBook(book));
+
+      bookContainer.appendChild(bookItem);
+    });
+  } catch (error) {
+    console.error("Error fetching books:", error);
   }
 }
+
+// Hàm toggle dropdown cho thể loại
+function toggleDropdown() {
+  const categoryDropdown = document.getElementById("categoryDropdown");
+  categoryDropdown.classList.toggle("show");
+}
+
+// Hàm gọi khi trang web được tải
+window.onload = () => {
+  loadAuthors(); // Tải danh sách tác giả khi trang web tải
+};
+
+// Hàm ẩn các dropdown khi người dùng click ra ngoài
+document.addEventListener("click", function (e) {
+  const categoryDropdown = document.getElementById("categoryDropdown");
+  const authorDropdown = document.getElementById("authorDropdown");
+
+  if (!e.target.closest(".dropdown")) {
+    categoryDropdown.classList.remove("show");
+    authorDropdown.classList.remove("show");
+  }
+});
 
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");

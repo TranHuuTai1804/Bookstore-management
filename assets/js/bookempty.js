@@ -1,3 +1,52 @@
+// Lưu dữ liệu bảng vào localStorage
+function saveTableToLocalStorage() {
+  const tableBody = document.getElementById("table-body");
+  const rowsData = Array.from(tableBody.children).map((row) => {
+    const inputs = Array.from(row.querySelectorAll("input"));
+    return inputs.map((input) => input.value); // Lưu giá trị của từng ô nhập liệu
+  });
+  localStorage.setItem("tableData", JSON.stringify(rowsData));
+}
+
+// Khôi phục dữ liệu từ localStorage
+function loadTableFromLocalStorage() {
+  const tableBody = document.getElementById("table-body");
+  const storedData = localStorage.getItem("tableData");
+
+  if (storedData) {
+    const rowsData = JSON.parse(storedData);
+
+    tableBody.innerHTML = ""; // Xoá nội dung hiện tại của bảng
+    rowsData.forEach((rowData) => {
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td><input type="text" name="id[]" value="${
+          rowData[0] || ""
+        }" placeholder="ID" class="book-no" required></td>
+        <td class="nameBook">
+          <input type="text" name="name[]" value="${
+            rowData[1] || ""
+          }" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+          <div class="autocomplete-suggestions" style="display: none;"></div>
+        </td>
+        <td><input type="text" name="category[]" value="${
+          rowData[2] || ""
+        }" placeholder="Category" class="book-category" required></td>
+        <td><input type="text" name="author[]" value="${
+          rowData[3] || ""
+        }" placeholder="Author" class="book-author" required></td>
+        <td><input type="number" name="quantity[]" value="${
+          rowData[4] || ""
+        }" placeholder="Quantity" class="book-quantity" min="1" required data-regulation></td>
+        <td><input type="number" name="price[]" value="${
+          rowData[5] || ""
+        }" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
+      `;
+      tableBody.appendChild(newRow);
+    });
+  }
+}
+
 // Hàm lấy giá trị So_luong_ton_it_nhat từ server
 async function fetchSoLuongTonItHon() {
   try {
@@ -227,6 +276,20 @@ function selectSuggestion(bookName, suggestionElement) {
     if (priceInput) priceInput.value = selectedBook.Gia || "";
   } catch (error) {
     console.error("Lỗi khi chọn gợi ý:", error);
+  }
+}
+
+//Xoá hàng
+function deleteRow() {
+  const tableBody = document.getElementById("table-body");
+
+  // Kiểm tra nếu bảng có ít nhất một hàng
+  if (tableBody.children.length > 0) {
+    // Xoá hàng cuối cùng
+    tableBody.removeChild(tableBody.lastElementChild);
+  } else {
+    // Hiển thị thông báo nếu không còn hàng
+    alert("Không còn hàng nào để xoá!");
   }
 }
 
