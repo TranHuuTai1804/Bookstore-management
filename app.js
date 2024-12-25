@@ -246,6 +246,7 @@ app.post("/addBook", async (req, res) => {
       quantity: req.body.quantity[index],
       price: req.body.price[index],
     }));
+    console.log("Sách muốn thêm: ", books);
 
     //xử lý quy định số lượng nhập và số lượng tồn
     const regulations = await runQuery(`Select *from Quy_dinh`);
@@ -263,6 +264,8 @@ app.post("/addBook", async (req, res) => {
 
     // Loop through each book and process
     for (const book of books) {
+      // Kiểm tra số lượng tồn trong bảng Sach nhỏ hơn 300
+
       // Kiểm tra số lượn g nhập ít nhất là 150
       if (
         parseInt(book.quantity, 10) < regulation.So_luong_nhap_it_nhat &&
@@ -273,19 +276,18 @@ app.post("/addBook", async (req, res) => {
           `/bookempty?message=Số+luong+nhap+it+nhat+la+${regulation.So_luong_nhap_it_nhat}.`
         );
       }
-
-      // Kiểm tra số lượng tồn trong bảng Sach nhỏ hơn 300
       const rows = await runQuery(`SELECT * FROM Sach WHERE Ten_sach LIKE ?`, [
         `%${book.name}%`,
       ]);
-
       const existingBook = rows[0];
-
+      console.log("Existing book", existingBook);
+      // Kiểm tra số lượng tồn và quy định
       if (
+        rows[0]> 0 &&
         existingBook.So_luong >= regulation.So_luong_ton_it_hon &&
         isSuDungQD4Enabled
-        
       ) {
+        // Chuyển hướng với thông báo lỗi khi số lượng tồn lớn hơn hoặc bằng quy định
         return res.redirect(
           `/bookempty?message=Không+thể+thêm+sách+có+lượng+tồn+lớn+hơn+${regulation.So_luong_ton_it_hon}.`
         );
@@ -294,8 +296,7 @@ app.post("/addBook", async (req, res) => {
       let id_sach;
 
       // Nếu sách đã tồn tại, cập nhật số lượng và giá
-      if (rows.length > 0) {
-        const existingBook = rows[0];
+      if ( rows[0]> 0) {
         const currentQuantity = existingBook.So_luong;
         const currentPrice = existingBook.Gia;
 
@@ -339,6 +340,7 @@ app.post("/addBook", async (req, res) => {
           `Sách với ID ${id_sach} đã được thêm vào Chi_tiet_phieu_nhap_sach với số lượng ${book.quantity}`
         );
       } else {
+        console.log("Sách mới muốn thêm: ", books);
         // Nếu sách chưa tồn tại, thêm mới vào bảng Sach
         const maxIdResult = await runQuery(
           `SELECT MAX(ID_sach) AS max_id FROM Sach`
@@ -369,6 +371,7 @@ app.post("/addBook", async (req, res) => {
         const maxPhieuResult = await runQuery(
           `SELECT MAX(ID_Phieu) AS max_phieu_id FROM phieu_nhap_sach`
         );
+        console.log("Max phieu: ", maxPhieuResult);
 
         // Tạo ID_Phieu mới
         const newPhieuId = maxPhieuResult[0].max_phieu_id
@@ -380,6 +383,7 @@ app.post("/addBook", async (req, res) => {
           `INSERT INTO phieu_nhap_sach (ID_Phieu, Ngay_nhap, Tong_so_luong, ID_sach) VALUES (?, NOW(), ?, ?)`,
           [newPhieuId, book.quantity, id_sach]
         );
+        console.log("New Phieu:", insertPhieuResult);
 
         // Lấy ID_Phieu vừa tạo (insertId của Phieu_nhap_sach)
         const id_phieu = insertPhieuResult.insertId;
@@ -390,6 +394,7 @@ app.post("/addBook", async (req, res) => {
            VALUES (?, ?, ?)`,
           [id_phieu, id_sach, book.quantity]
         );
+        console.log("New chi_tiet_phieu:", insertChiTietResult);
 
         console.log(
           `Sách với ID ${id_sach} đã được thêm vào Chi_tiet_phieu_nhap_sach với số lượng ${book.quantity}`
