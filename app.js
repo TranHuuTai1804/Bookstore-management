@@ -132,7 +132,7 @@ app.get("/api/books", (req, res) => {
     }
   });
 });
-app.get('/getBooksByMonth', (req, res) => {
+app.get("/getBooksByMonth", (req, res) => {
   const { year, month } = req.query;
 
   // Truy vấn cơ sở dữ liệu để lấy tổng số lượng sách theo tháng
@@ -146,12 +146,12 @@ app.get('/getBooksByMonth', (req, res) => {
   `;
 
   connection.query(query, [year, month], (err, results) => {
-      if (err) {
-          console.error('Error querying data:', err);
-          return res.status(500).send('Error querying database');
-      }
+    if (err) {
+      console.error("Error querying data:", err);
+      return res.status(500).send("Error querying database");
+    }
 
-      res.json(results);  // Trả dữ liệu dưới dạng JSON
+    res.json(results); // Trả dữ liệu dưới dạng JSON
   });
 });
 //Route lấy ra thông tin bảng khách hàng
@@ -246,25 +246,49 @@ app.post("/addBook", async (req, res) => {
       quantity: req.body.quantity[index],
       price: req.body.price[index],
     }));
-    console.log("Nhận từ client: ", books);
+
+    //xử lý quy định số lượng nhập và số lượng tồn
+    const regulations = await runQuery(`Select *from Quy_dinh`);
+    const regulation = regulations[0];
+
+    const isSuDungQD4Enabled = regulation.Su_Dung_QD4[0] === 1; // Su_Dung_QD4 là kiểu Buffer, cần kiểm tra phần tử đầu tiên
+
+    // Kiểm tra nếu Su_Dung_QD4 được bật (giá trị là 1)
+    if (isSuDungQD4Enabled) {
+      // Tiến hành hành động nếu quy định QD4 được áp dụng
+      console.log("Quy định QD4 đang được áp dụng.");
+    } else {
+      console.log("Quy định QD4 không được áp dụng.");
+    }
 
     // Loop through each book and process
     for (const book of books) {
       // Kiểm tra số lượn g nhập ít nhất là 150
-      if (parseInt(book.quantity, 10) < 150) {
+      if (
+        parseInt(book.quantity, 10) < regulation.So_luong_nhap_it_nhat &&
+        isSuDungQD4Enabled
+      ) {
         // Chuyển hướng với thông báo lỗi khi số lượng nhập ít hơn 150
-        return res.redirect("/bookempty?message=Số+luong+nhap+it+nhat+la+150.");
+        return res.redirect(
+          `/bookempty?message=Số+luong+nhap+it+nhat+la+${regulation.So_luong_nhap_it_nhat}.`
+        );
       }
-     
-       // Kiểm tra số lượng tồn trong bảng Sach nhỏ hơn 300
+
+      // Kiểm tra số lượng tồn trong bảng Sach nhỏ hơn 300
       const rows = await runQuery(`SELECT * FROM Sach WHERE Ten_sach LIKE ?`, [
         `%${book.name}%`,
       ]);
 
       const existingBook = rows[0];
 
-      if (existingBook.So_luong >= 300) {
-        return res.redirect("/bookempty?message=Không+thể+thêm+sách+có+lượng+tồn+lớn+hơn+300.");
+      if (
+        existingBook.So_luong >= regulation.So_luong_ton_it_hon &&
+        isSuDungQD4Enabled
+        
+      ) {
+        return res.redirect(
+          `/bookempty?message=Không+thể+thêm+sách+có+lượng+tồn+lớn+hơn+${regulation.So_luong_ton_it_hon}.`
+        );
       }
 
       let id_sach;
@@ -454,19 +478,22 @@ app.get("/report", (req, res) => {
 app.get("/lookup", (req, res) => {
   res.sendFile(join(__dirname, "lookup.html"));
 });
+app.get("/edit", (req, res) => {
+  res.sendFile(join(__dirname, "edit.html"));
+});
 
 // API để xử lý yêu cầu từ phía client
-app.get('/report/inventory', async (req, res) => {
+app.get("/report/inventory", async (req, res) => {
   const { date } = req.query; // Lấy giá trị 'date' từ query string
 
   if (!date) {
     // Nếu không có ngày trong query string, trả lỗi
-    return res.status(400).json({ error: 'Ngày không được cung cấp.' });
+    return res.status(400).json({ error: "Ngày không được cung cấp." });
   }
 
   try {
     // Thực hiện truy vấn
-    const [year, month, day] = date.split('-'); // Tách date theo dấu '-'
+    const [year, month, day] = date.split("-"); // Tách date theo dấu '-'
     const [rows, fields] = await new Promise((resolve, reject) => {
       connection.query(
         `
@@ -539,17 +566,18 @@ LEFT JOIN Thong_ke_ban_trong_ky Tong_ban_trong_ky ON s.ID_Sach = Tong_ban_trong_
         }
       );
     });
-
   } catch (error) {
-    console.error('Lỗi truy vấn:', error);
-    res.status(500).json({ error: 'Đã có lỗi xảy ra trong quá trình truy vấn dữ liệu.' });
+    console.error("Lỗi truy vấn:", error);
+    res
+      .status(500)
+      .json({ error: "Đã có lỗi xảy ra trong quá trình truy vấn dữ liệu." });
   }
 });
 
-app.get('/report/debt', async (req, res) => {
-  const { date } = req.query;  // Lấy ngày từ query param (MM/YYYY)
-  const [year, month, day] = date.split('-'); // Tách date theo dấu '-'
-  const endDatePrevMonth = date;  // Ngày cuối tháng trước
+app.get("/report/debt", async (req, res) => {
+  const { date } = req.query; // Lấy ngày từ query param (MM/YYYY)
+  const [year, month, day] = date.split("-"); // Tách date theo dấu '-'
+  const endDatePrevMonth = date; // Ngày cuối tháng trước
   try {
     // Tính công nợ đầu kỳ
     const debtStartQuery = `
@@ -566,7 +594,9 @@ app.get('/report/debt', async (req, res) => {
     `;
 
     // Query MySQL sử dụng các tham số truyền vào
-    const [debtStartResult] = await connection.promise().query(debtStartQuery, [endDatePrevMonth, endDatePrevMonth]);
+    const [debtStartResult] = await connection
+      .promise()
+      .query(debtStartQuery, [endDatePrevMonth, endDatePrevMonth]);
 
     // Tính phát sinh công nợ trong kỳ (trong tháng)
     const debtCurrentQuery = `
@@ -583,7 +613,9 @@ app.get('/report/debt', async (req, res) => {
     `;
 
     // Query MySQL sử dụng các tham số truyền vào
-    const [debtCurrentResult] = await connection.promise().query(debtCurrentQuery, [month, year, month, year]);
+    const [debtCurrentResult] = await connection
+      .promise()
+      .query(debtCurrentQuery, [month, year, month, year]);
 
     // Tính công nợ cuối kỳ: cộng công nợ đầu kỳ và phát sinh trong kỳ
     const debtEndResult = debtStartResult.map((start) => {
@@ -598,25 +630,21 @@ app.get('/report/debt', async (req, res) => {
         Ten_khach_hang: start.Ten_khach_hang,
         Cong_no_dau_ky: start.Cong_no_dau_ky,
         Cong_no_cuoi_ky: debtEnd,
-        Tong_thu_tien: current ? current.Tong_thu_tien : 0,  // Tổng tiền thu trong kỳ
-        Tong_hoa_don: current ? current.Tong_hoa_don : 0    // Tổng tiền hóa đơn trong kỳ
+        Tong_thu_tien: current ? current.Tong_thu_tien : 0, // Tổng tiền thu trong kỳ
+        Tong_hoa_don: current ? current.Tong_hoa_don : 0, // Tổng tiền hóa đơn trong kỳ
       };
     });
 
     // Trả về dữ liệu
     console.log(debtEndResult);
     res.json(debtEndResult);
-
   } catch (error) {
-    console.error('Lỗi khi lấy công nợ:', error.message);
+    console.error("Lỗi khi lấy công nợ:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
-
 
 // Khởi động server
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
-
-
