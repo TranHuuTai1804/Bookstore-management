@@ -219,10 +219,9 @@ app.post("/addBook", async (req, res) => {
   try {
     // Lấy giá trị Su_Dung_QD4 và So_luong_ton_it_hon từ bảng Quy_dinh
     const [regulation] = await runQuery(
-      "SELECT Su_Dung_QD4, So_luong_ton_it_hon FROM Quy_dinh"
+      "SELECT Su_Dung_QD4, So_luong_ton_it_hon, So_luong_nhap_it_nhat FROM Quy_dinh"
     );
 
-    // Kiểm tra nếu không có giá trị từ bảng Quy_dinh, trả về lỗi
     if (!regulation) {
       return res.redirect(
         "/bookempty?message=" +
@@ -232,12 +231,7 @@ app.post("/addBook", async (req, res) => {
       );
     }
 
-    console.log("Dữ liệu quy định:", regulation);
-
-    // Kiểm tra Su_Dung_QD4 và chuyển giá trị sang số
-    const suDungQD4Buffer = regulation.Su_Dung_QD4; // Lấy giá trị Buffer
-
-    // Đảm bảo rằng Su_Dung_QD4 là một Buffer hợp lệ
+    const suDungQD4Buffer = regulation.Su_Dung_QD4;
     if (!Buffer.isBuffer(suDungQD4Buffer)) {
       return res.redirect(
         "/bookempty?message=" +
@@ -246,39 +240,22 @@ app.post("/addBook", async (req, res) => {
           )
       );
     }
-
-    // Lấy giá trị từ Buffer (chỉ đọc byte đầu tiên)
-    const suDungQD4Value = suDungQD4Buffer.readUInt8(0); // Đọc byte đầu tiên
-
-    console.log("suDungQD4Value:", suDungQD4Value);
-
-    // Kiểm tra nếu suDungQD4Value không phải là số hợp lệ
-    if (isNaN(suDungQD4Value)) {
-      return res.redirect(
-        "/bookempty?message=" +
-          encodeURIComponent("Error: Không thể đọc giá trị Su_Dung_QD4.")
-      );
-    }
-
-    // Chuyển giá trị Su_Dung_QD4 sang số
+    const suDungQD4Value = suDungQD4Buffer.readUInt8(0);
     const suDungQD4Number = Number(suDungQD4Value);
-    console.log("suDungQD4Number:", suDungQD4Number);
-
-    // Kiểm tra nếu Su_Dung_QD4 = 0, không áp dụng quy định So_luong_ton_it_hon
     const minStockLimit =
-      suDungQD4Number !== 0 ? regulation.So_luong_ton_it_hon : null; // Nếu Su_Dung_QD4 = 0, không áp dụng quy định So_luong_ton_it_hon
-    console.log("minStockLimit:", minStockLimit);
+      suDungQD4Number !== 0 ? regulation.So_luong_ton_it_hon : null;
+    const minImportQuantity =
+      suDungQD4Number !== 0 ? regulation.So_luong_nhap_it_nhat : null;
 
     const books = req.body.id.map((id, index) => ({
       id,
       name: req.body.name[index],
       category: req.body.category[index],
       author: req.body.author[index],
-      quantity: parseInt(req.body.quantity[index], 10), // Chuyển thành số nguyên
+      quantity: parseInt(req.body.quantity[index], 10),
       price: parseFloat(req.body.price[index]),
     }));
 
-    // Kiểm tra số lượng tồn của sách trước khi thêm vào nếu Su_Dung_QD4 khác 0
     for (const book of books) {
       const rows = await runQuery(
         `SELECT ID_sach, So_luong FROM Sach
@@ -286,26 +263,26 @@ app.post("/addBook", async (req, res) => {
         [book.name, book.category, book.author]
       );
 
+      let id_sach;
+
       if (rows.length > 0) {
         const currentQuantity = parseInt(rows[0].So_luong, 10);
         const newQuantity = currentQuantity + book.quantity;
 
-        // Kiểm tra nếu quy định áp dụng và số lượng tồn sau khi cộng thêm sách mới vượt quá quy định
         if (minStockLimit !== null && newQuantity > minStockLimit) {
           return res.redirect(
             `/bookempty?message=${encodeURIComponent(
-              `Số lượng tồn của sách "${book.name}" vượt quá số lượng tối đa cho phép (${minStockLimit}). Vui lòng điều chỉnh số lượng nhập.`
+              `Số lượng tồn của sách "${book.name}" vượt quá số lượng tối đa cho phép (${minStockLimit}).`
             )}`
           );
         }
 
-        // Cập nhật số lượng sách nếu không vi phạm quy định
         await runQuery(`UPDATE Sach SET So_luong = ? WHERE ID_sach = ?`, [
           newQuantity,
           rows[0].ID_sach,
         ]);
+        id_sach = rows[0].ID_sach;
       } else {
-        // Kiểm tra sách mới nếu số lượng vượt quá quy định
         if (minStockLimit !== null && book.quantity > minStockLimit) {
           return res.redirect(
             `/bookempty?message=${encodeURIComponent(
@@ -314,12 +291,16 @@ app.post("/addBook", async (req, res) => {
           );
         }
 
-        // Thêm sách mới vào kho nếu không vi phạm quy định
+        const maxIdResult = await runQuery(
+          `SELECT MAX(ID_sach) AS max_id FROM Sach`
+        );
+        const newId = maxIdResult[0].max_id ? maxIdResult[0].max_id + 1 : 1;
+
         await runQuery(
           `INSERT INTO Sach (ID_sach, Ten_sach, The_loai, Ten_tac_gia, So_luong, Gia)
            VALUES (?, ?, ?, ?, ?, ?)`,
           [
-            book.id,
+            newId,
             book.name,
             book.category,
             book.author,
@@ -327,10 +308,26 @@ app.post("/addBook", async (req, res) => {
             book.price,
           ]
         );
+        id_sach = newId;
       }
+
+      // Thêm vào bảng Phieu_nhap_sach
+      const insertPhieuResult = await runQuery(
+        `INSERT INTO phieu_nhap_sach (Ngay_nhap, Tong_so_luong, ID_sach) VALUES (NOW(), ?, ?)`,
+        [book.quantity, id_sach]
+      );
+
+      // Lấy ID_Phieu vừa tạo
+      const id_phieu = insertPhieuResult.insertId;
+
+      // Thêm vào bảng Chi_tiet_phieu_nhap_sach
+      await runQuery(
+        `INSERT INTO Chi_tiet_phieu_nhap_sach (ID_Phieu, ID_Sach, So_luong)
+         VALUES (?, ?, ?)`,
+        [id_phieu, id_sach, book.quantity]
+      );
     }
 
-    // Sau khi thêm sách thành công
     res.redirect(
       "/bookempty?message=" + encodeURIComponent("Book added successfully!")
     );
