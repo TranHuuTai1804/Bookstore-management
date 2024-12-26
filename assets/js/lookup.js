@@ -1,7 +1,26 @@
-// Khi trang được tải, hiển thị danh sách mặc định
-document.addEventListener("DOMContentLoaded", () => {
-  showDefaultList(document.getElementById("allBtn"));
-});
+// Hàm lấy giá trị So_luong_ton_it_nhat từ server
+async function fetchSoLuongTonItHon() {
+  try {
+    const response = await fetch("/regulation");
+    if (!response.ok) {
+      throw new Error("Failed to fetch regulation");
+    }
+    const regulations = await response.json();
+    const soLuongTonItHon = regulations?.[0]?.So_luong_ton_it_hon;
+
+    // console.log(soLuongTonItHon);
+
+    if (soLuongTonItHon !== undefined) {
+      return soLuongTonItHon;
+    } else {
+      console.error("Không tìm thấy giá trị So_luong_ton_it_hon");
+      return 0; // Hoặc một giá trị mặc định nếu không có
+    }
+  } catch (error) {
+    console.error("Error fetching So_luong_ton_it_nhat:", error);
+    return 0; // Giá trị mặc định nếu có lỗi
+  }
+}
 
 // Khởi tạo mảng chứa tên sách
 let bookTitles = [];
@@ -28,6 +47,7 @@ async function fetchBookTitles() {
 // Gọi hàm fetchBookTitles để lấy dữ liệu và cập nhật mảng ngay khi trang được tải
 document.addEventListener("DOMContentLoaded", async () => {
   await fetchBookTitles(); // Đảm bảo dữ liệu được tải trước khi cho phép tìm kiếm
+  await showDefaultList(); // Hiển thị tất cả các sách ngay khi trang tải
 });
 
 // Định nghĩa các phần tử trong DOM
@@ -64,7 +84,6 @@ function display(result) {
   // Thêm danh sách vào resultIp
   resultIp.innerHTML = "<ul>" + content.join("") + "</ul>";
 }
-
 // Hàm khi người dùng chọn kết quả tìm kiếm
 async function selectInput(list) {
   // Cập nhật giá trị ô input với tên sách được chọn
@@ -78,6 +97,9 @@ async function selectInput(list) {
       throw new Error("Failed to fetch books");
     }
     const books = await response.json();
+
+    // Lấy giá trị So_luong_ton_it_nhat từ quy định
+    const soLuongTonItHon = await fetchSoLuongTonItHon();
 
     // Tìm cuốn sách có tên khớp với tên được chọn
     const selectedBook = books.find((book) => book.Ten_sach === list.innerHTML);
@@ -101,9 +123,11 @@ async function selectInput(list) {
           <p class="book-author">Tác giả: ${selectedBook.Ten_tac_gia}</p>
           <p class="book-price">Giá: $${selectedBook.Gia}</p>
           <div class="progress-container">
-            <span class="progress-text">${selectedBook.So_luong}/300</span>
+            <span class="progress-text">${
+              selectedBook.So_luong
+            }/${soLuongTonItHon}</span>
             <div class="progress-bar" style="width: ${
-              (selectedBook.So_luong / 300) * 100
+              (selectedBook.So_luong / soLuongTonItHon) * 100
             }%;"></div>
           </div>
         </div>
@@ -116,9 +140,8 @@ async function selectInput(list) {
     console.error("Error fetching book details:", error);
   }
 }
-
 // Hàm hiển thị danh sách mặc định (tất cả các loại sách)
-async function showDefaultList(button = null) {
+async function showDefaultList() {
   try {
     // Gọi API để lấy tất cả sách
     const response = await fetch("/api/books");
@@ -126,6 +149,9 @@ async function showDefaultList(button = null) {
       throw new Error("Failed to fetch books");
     }
     const books = await response.json();
+
+    // Lấy giá trị So_luong_ton_it_nhat từ quy định
+    const soLuongTonItHon = await fetchSoLuongTonItHon();
 
     // Hiển thị danh sách mặc định
     const bookContainer = document.querySelector(".book-container");
@@ -141,10 +167,10 @@ async function showDefaultList(button = null) {
         <h3 class="book-title">${book.Ten_sach}</h3>
         <p class="book-price">$${book.Gia}</p>
         <div class="progress-container">
-            <span class="progress-text">${book.So_luong}/300</span>
-            <div class="progress-bar" style="width: ${
-              (book.So_luong / 300) * 100
-            }%;"></div>
+          <span class="progress-text">${book.So_luong}/${soLuongTonItHon}</span>
+          <div class="progress-bar" style="width: ${
+            (book.So_luong / soLuongTonItHon) * 100
+          }%;"></div>
         </div>
       `;
 
@@ -153,18 +179,18 @@ async function showDefaultList(button = null) {
 
       bookContainer.appendChild(bookItem);
     });
-
-    // Cập nhật nút active (nếu có)
-    updateActiveButton(button);
   } catch (error) {
     console.error("Error fetching books:", error);
   }
 }
 
-// Hàm khi người dùng chọn sách từ danh sách (tương tự như lúc tìm kiếm)
+// Hàm khi người dùng chọn sách từ danh sách
 async function selectBook(book) {
   const bookContainer = document.querySelector(".book-container");
   bookContainer.innerHTML = ""; // Xóa nội dung cũ nếu có
+
+  // Lấy giá trị So_luong_ton_it_nhat từ quy định
+  const soLuongTonItHon = await fetchSoLuongTonItHon();
 
   const bookDetail = document.createElement("div");
   bookDetail.className = "book-detail";
@@ -180,17 +206,15 @@ async function selectBook(book) {
       <p class="book-author">Tác giả: ${book.Ten_tac_gia}</p>
       <p class="book-price">Giá: $${book.Gia}</p>
       <div class="progress-container">
-        <span class="progress-text">${book.So_luong}/300</span>
+        <span class="progress-text">${book.So_luong}/${soLuongTonItHon}</span>
         <div class="progress-bar" style="width: ${
-          (book.So_luong / 300) * 100
+          (book.So_luong / soLuongTonItHon) * 100
         }%;"></div>
       </div>
     </div>
   `;
-
   bookContainer.appendChild(bookDetail);
 }
-
 // Khi trang được tải, hiển thị danh sách mặc định
 document.addEventListener("DOMContentLoaded", () => {
   showDefaultList(); // Hiển thị tất cả các sách ngay khi trang tải
@@ -209,7 +233,7 @@ async function filterByCategory(category, button) {
     // Lọc sách theo thể loại
     const filteredBooks = books.filter((book) =>
       category === "Hot"
-        ? book.So_luong < 10 // Logic riêng cho "Hot"
+        ? book.So_luong < 100 // Logic riêng cho "Hot"
         : book.The_loai === category
     );
 
@@ -256,23 +280,111 @@ async function filterByCategory(category, button) {
     bookContainer.appendChild(table);
 
     // Cập nhật nút active
-    updateActiveButton(button);
   } catch (error) {
     console.error("Error fetching books by category:", error);
   }
 }
 
-// Hàm cập nhật trạng thái nút active
-function updateActiveButton(button) {
-  // Xóa class active khỏi tất cả nút
-  const buttons = document.querySelectorAll(".filter-btn");
-  buttons.forEach((btn) => btn.classList.remove("active"));
+// Hàm để tải danh sách tác giả từ server và hiển thị trong dropdown
+function loadAuthors() {
+  // Giả sử bạn có một API để lấy danh sách tác giả
+  fetch("/api/books")
+    .then((response) => response.json())
+    .then((authors) => {
+      const authorDropdown = document.getElementById("authorDropdown");
+      authorDropdown.innerHTML = ""; // Xóa danh sách cũ
 
-  // Gán class active cho nút hiện tại
-  if (button) {
-    button.classList.add("active");
+      authors.forEach((author) => {
+        const authorButton = document.createElement("button");
+        authorButton.classList.add("filter-btn");
+        authorButton.textContent = author.Ten_tac_gia;
+        authorButton.onclick = () => selectAuthor(author.Ten_tac_gia); // Gọi selectAuthor khi nhấp vào tác giả
+        authorDropdown.appendChild(authorButton);
+      });
+    })
+    .catch((error) => console.error("Lỗi khi lấy danh sách tác giả:", error));
+}
+
+// Hàm toggle dropdown cho tác giả
+function toggleAuthorDropdown() {
+  const authorDropdown = document.getElementById("authorDropdown");
+  authorDropdown.classList.toggle("show"); // Thêm hoặc xóa lớp 'show' để hiển thị/ẩn dropdown
+}
+
+// Hàm chọn tác giả và hiển thị tên tác giả đã chọn
+async function selectAuthor(authorName) {
+  // Đóng dropdown khi đã chọn tác giả
+  const authorDropdown = document.getElementById("authorDropdown");
+  authorDropdown.classList.remove("show");
+
+  // Gọi API để lấy tất cả sách
+  try {
+    const response = await fetch("/api/books");
+    if (!response.ok) {
+      throw new Error("Failed to fetch books");
+    }
+    const books = await response.json();
+
+    // Lọc sách theo tác giả đã chọn
+    const filteredBooks = books.filter(
+      (book) => book.Ten_tac_gia === authorName
+    );
+
+    // Lấy giá trị So_luong_ton_it_nhat từ quy định
+    const soLuongTonItHon = await fetchSoLuongTonItHon();
+
+    // Hiển thị danh sách sách của tác giả
+    const bookContainer = document.querySelector(".book-container");
+    bookContainer.innerHTML = ""; // Xóa nội dung cũ nếu có
+
+    filteredBooks.forEach((book) => {
+      const bookItem = document.createElement("div");
+      bookItem.className = "book-item";
+      bookItem.innerHTML = `
+        <img src="${book.img || "/book/book1.png"}" alt="${
+        book.Ten_sach
+      }" class="book-image">
+        <h3 class="book-title">${book.Ten_sach}</h3>
+        <p class="book-price">$${book.Gia}</p>
+        <div class="progress-container">
+          <span class="progress-text">${book.So_luong}/${soLuongTonItHon}</span>
+          <div class="progress-bar" style="width: ${
+            (book.So_luong / soLuongTonItHon) * 100
+          }%;"></div>
+        </div>
+      `;
+
+      // Thêm sự kiện click để hiển thị chi tiết sách khi người dùng click vào sách
+      bookItem.addEventListener("click", () => selectBook(book));
+
+      bookContainer.appendChild(bookItem);
+    });
+  } catch (error) {
+    console.error("Error fetching books:", error);
   }
 }
+
+// Hàm toggle dropdown cho thể loại
+function toggleDropdown() {
+  const categoryDropdown = document.getElementById("categoryDropdown");
+  categoryDropdown.classList.toggle("show");
+}
+
+// Hàm gọi khi trang web được tải
+window.onload = () => {
+  loadAuthors(); // Tải danh sách tác giả khi trang web tải
+};
+
+// Hàm ẩn các dropdown khi người dùng click ra ngoài
+document.addEventListener("click", function (e) {
+  const categoryDropdown = document.getElementById("categoryDropdown");
+  const authorDropdown = document.getElementById("authorDropdown");
+
+  if (!e.target.closest(".dropdown")) {
+    categoryDropdown.classList.remove("show");
+    authorDropdown.classList.remove("show");
+  }
+});
 
 function toggleMenu() {
   const menu = document.getElementById("hero-menu");

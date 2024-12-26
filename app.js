@@ -243,8 +243,8 @@ app.post("/addBook", async (req, res) => {
       name: name,
       category: req.body.category[index],
       author: req.body.author[index],
-      quantity: req.body.quantity[index],
-      price: req.body.price[index],
+      quantity: parseInt(req.body.quantity[index], 10),
+      price: parseFloat(req.body.price[index]),
     }));
     console.log("Sách muốn thêm: ", books);
 
@@ -281,9 +281,10 @@ app.post("/addBook", async (req, res) => {
       ]);
       const existingBook = rows[0];
       console.log("Existing book", existingBook);
+      console.log("So luong ton it hon: ",regulation.So_luong_ton_it_hon);
       // Kiểm tra số lượng tồn và quy định
       if (
-        rows[0]> 0 &&
+        existingBook &&
         existingBook.So_luong >= regulation.So_luong_ton_it_hon &&
         isSuDungQD4Enabled
       ) {
@@ -296,7 +297,7 @@ app.post("/addBook", async (req, res) => {
       let id_sach;
 
       // Nếu sách đã tồn tại, cập nhật số lượng và giá
-      if ( rows[0]> 0) {
+      if ( existingBook) {
         const currentQuantity = existingBook.So_luong;
         const currentPrice = existingBook.Gia;
 
@@ -400,14 +401,32 @@ app.post("/addBook", async (req, res) => {
           `Sách với ID ${id_sach} đã được thêm vào Chi_tiet_phieu_nhap_sach với số lượng ${book.quantity}`
         );
       }
+
+      // Thêm vào bảng Phieu_nhap_sach
+      const insertPhieuResult = await runQuery(
+        `INSERT INTO phieu_nhap_sach (Ngay_nhap, Tong_so_luong, ID_sach) VALUES (NOW(), ?, ?)`,
+        [book.quantity, id_sach]
+      );
+
+      // Lấy ID_Phieu vừa tạo
+      const id_phieu = insertPhieuResult.insertId;
+
+      // Thêm vào bảng Chi_tiet_phieu_nhap_sach
+      await runQuery(
+        `INSERT INTO Chi_tiet_phieu_nhap_sach (ID_Phieu, ID_Sach, So_luong)
+         VALUES (?, ?, ?)`,
+        [id_phieu, id_sach, book.quantity]
+      );
     }
 
-    // Redirect to /bookempty with a success message
-    res.redirect("/bookempty?message=Book+added+successfully");
+    res.redirect(
+      "/bookempty?message=" + encodeURIComponent("Book added successfully!")
+    );
   } catch (error) {
     console.error(error);
-    // Redirect to /bookempty with an error message
-    res.redirect("/bookempty?message=Error+processing+books");
+    res.redirect(
+      "/bookempty?message=" + encodeURIComponent("Error processing books")
+    );
   }
 });
 //Route để cập nhật bảng Quy_định

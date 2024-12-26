@@ -1,10 +1,146 @@
+// Lưu dữ liệu bảng vào localStorage
+function saveTableToLocalStorage() {
+  const tableBody = document.getElementById("table-body");
+  const rowsData = Array.from(tableBody.children).map((row) => {
+    const inputs = Array.from(row.querySelectorAll("input"));
+    return inputs.map((input) => input.value); // Lưu giá trị của từng ô nhập liệu
+  });
+  localStorage.setItem("tableData", JSON.stringify(rowsData));
+}
+
+// Khôi phục dữ liệu từ localStorage
+function loadTableFromLocalStorage() {
+  const tableBody = document.getElementById("table-body");
+  const storedData = localStorage.getItem("tableData");
+
+  if (storedData) {
+    const rowsData = JSON.parse(storedData);
+
+    tableBody.innerHTML = ""; // Xoá nội dung hiện tại của bảng
+    rowsData.forEach((rowData) => {
+      const newRow = document.createElement("tr");
+      newRow.innerHTML = `
+        <td><input type="text" name="id[]" value="${
+          rowData[0] || ""
+        }" placeholder="ID" class="book-no" required></td>
+        <td class="nameBook">
+          <input type="text" name="name[]" value="${
+            rowData[1] || ""
+          }" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
+          <div class="autocomplete-suggestions" style="display: none;"></div>
+        </td>
+        <td><input type="text" name="category[]" value="${
+          rowData[2] || ""
+        }" placeholder="Category" class="book-category" required></td>
+        <td><input type="text" name="author[]" value="${
+          rowData[3] || ""
+        }" placeholder="Author" class="book-author" required></td>
+        <td><input type="number" name="quantity[]" value="${
+          rowData[4] || ""
+        }" placeholder="Quantity" class="book-quantity" min="1" required data-regulation></td>
+        <td><input type="number" name="price[]" value="${
+          rowData[5] || ""
+        }" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
+      `;
+      tableBody.appendChild(newRow);
+    });
+  }
+}
+
+// Hàm lấy giá trị So_luong_ton_it_nhat từ server
+async function fetchSoLuongTonItHon() {
+  try {
+    const response = await fetch("/regulation");
+    if (!response.ok) {
+      throw new Error("Failed to fetch regulation");
+    }
+    const regulations = await response.json();
+    const soLuongTonItHon = regulations?.[0]?.So_luong_ton_it_hon;
+
+    // console.log(soLuongTonItHon);
+
+    if (soLuongTonItHon !== undefined) {
+      return soLuongTonItHon;
+    } else {
+      console.error("Không tìm thấy giá trị So_luong_ton_it_hon");
+      return 0; // Hoặc một giá trị mặc định nếu không có
+    }
+  } catch (error) {
+    console.error("Error fetching So_luong_ton_it_nhat:", error);
+    return 0; // Giá trị mặc định nếu có lỗi
+  }
+}
+
+let minInput = [];
+let isMinEnabled = false;
+
+// Tải quy định từ server
+async function fetchRegulation() {
+  try {
+    const response = await fetch("/regulation");
+    if (!response.ok) throw new Error("Failed to fetch regulations");
+
+    const regulations = await response.json();
+
+    // Xác định trạng thái quy định và cập nhật giá trị
+    processRegulations(regulations);
+
+    // Cập nhật input sau khi xử lý xong quy định
+    updateInputMinValues();
+  } catch (error) {
+    console.error("Error fetching regulations:", error);
+  }
+}
+
+// Xử lý dữ liệu quy định
+function processRegulations(regulations) {
+  // Kiểm tra xem có quy định hợp lệ không
+  if (!regulations || !Array.isArray(regulations) || regulations.length === 0) {
+    console.warn("No regulations found"); // Cảnh báo khi không có dữ liệu quy định
+    isMinEnabled = false; // Tắt quy định
+    minInput = []; // Đặt lại mảng minInput
+    return;
+  }
+
+  // Kiểm tra giá trị Su_Dung_QD4
+  const suDungQD4 = regulations[0]?.Su_Dung_QD4?.data?.[0];
+
+  // Kiểm tra nếu Su_Dung_QD4 = 0
+  isMinEnabled = Number(suDungQD4) !== 0;
+
+  if (isMinEnabled) {
+    minInput = regulations.map((reg) => reg.So_luong_nhap_it_nhat);
+    console.log("Quy định nhập tối thiểu được bật:", minInput);
+  } else {
+    console.log("Quy định nhập tối thiểu đang tắt.");
+    minInput = []; // Làm rỗng mảng minInput khi tắt quy định
+  }
+}
+
+// Cập nhật giá trị min cho các input
+function updateInputMinValues() {
+  const inputs = document.querySelectorAll("input[data-regulation]");
+  inputs.forEach((input, index) => {
+    if (isMinEnabled && minInput[index] !== undefined) {
+      input.min = minInput[index];
+    } else {
+      input.removeAttribute("min");
+    }
+  });
+}
+
+// Gọi hàm tải quy định khi trang được tải
+document.addEventListener("DOMContentLoaded", fetchRegulation);
+
 // Toast
-// Lấy tham số 'message' từ query string
 const urlParams = new URLSearchParams(window.location.search);
 const message = urlParams.get("message");
 
 if (message) {
-  const isError = message.toLowerCase().includes("error"); // Kiểm tra nếu thông báo chứa từ 'error'
+  const isError =
+    message.toLowerCase().includes("ít nhất") ||
+    message.toLowerCase().includes("lượng tồn") ||
+    message.toLowerCase().includes("error");
 
   Toastify({
     text: decodeURIComponent(message),
@@ -13,8 +149,8 @@ if (message) {
     gravity: "top",
     position: "right",
     backgroundColor: isError
-      ? "linear-gradient(to right, #ff5f6d, #ffc371)"
-      : "linear-gradient(to right, #00b09b, #96c93d)",
+      ? "linear-gradient(to right, #ff5f6d, #ffc371)" // Màu dành cho lỗi
+      : "linear-gradient(to right, #00b09b, #96c93d)", // Màu dành cho thành công
   }).showToast();
 }
 
@@ -38,7 +174,7 @@ async function fetchBookTitles() {
       Gia: book.Gia,
     }));
 
-    console.log("Danh sách sách hiện tại:", booksList);
+    // console.log("Danh sách sách hiện tại:", booksList);
   } catch (error) {
     console.error("Error fetching books:", error);
   }
@@ -143,6 +279,21 @@ function selectSuggestion(bookName, suggestionElement) {
     console.error("Lỗi khi chọn gợi ý:", error);
   }
 }
+
+//Xoá hàng
+function deleteRow() {
+  const tableBody = document.getElementById("table-body");
+
+  // Kiểm tra nếu bảng có ít nhất một hàng
+  if (tableBody.children.length > 0) {
+    // Xoá hàng cuối cùng
+    tableBody.removeChild(tableBody.lastElementChild);
+  } else {
+    // Hiển thị thông báo nếu không còn hàng
+    alert("Không còn hàng nào để xoá!");
+  }
+}
+
 // Hàm thêm hàng mới
 function addRow() {
   const tableBody = document.getElementById("table-body");
@@ -173,26 +324,6 @@ document.addEventListener("click", function (e) {
         suggestion.style.display = "none";
       });
   }
-});
-
-// Lấy thẻ input ngày
-const dateInput = document.getElementById("date-receipt");
-
-// Hàm để lấy ngày hiện tại theo định dạng YYYY-MM-DD
-function getCurrentDate() {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0"); // Tháng bắt đầu từ 0
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Gán ngày hiện tại vào thẻ input khi trang được tải lên
-dateInput.value = getCurrentDate();
-
-// Cập nhật ngày khi người dùng nhấp vào thẻ input
-dateInput.addEventListener("focus", function () {
-  dateInput.value = getCurrentDate(); // Gán lại ngày hiện tại nếu có thay đổi
 });
 
 // Hàm toggle menu
@@ -227,12 +358,13 @@ function toggleMenu() {
   }
 }
 
-// Hàm xử lý khi nhấn nút Done với id duy nhất cho từng ô input
-function submitBooks() {
+async function submitBooks() {
   const rows = document.querySelectorAll("#table-body tr");
   const books = [];
   let hasEmptyField = false;
+  let totalQuantity = 0;
 
+  // Lặp qua từng dòng sách trong bảng
   rows.forEach((row) => {
     const cells = row.querySelectorAll("input");
     const bookData = {
@@ -240,18 +372,22 @@ function submitBooks() {
       name: cells[1].value.trim(),
       category: cells[2].value.trim(),
       author: cells[3].value.trim(),
-      quantity: cells[4].value.trim(),
+      quantity: parseInt(cells[4].value.trim()) || 0,
+      price: parseFloat(cells[5].value.trim()) || 0,
     };
 
+    // Kiểm tra nếu bất kỳ trường nào bị bỏ trống
     if (
       !bookData.no ||
       !bookData.name ||
       !bookData.category ||
       !bookData.author ||
-      !bookData.quantity
+      bookData.quantity <= 0
     ) {
       hasEmptyField = true;
     }
+
+    totalQuantity += bookData.quantity;
     books.push(bookData);
   });
 
@@ -270,26 +406,12 @@ function submitBooks() {
       <td class="nameBook">
           <input type="text" name="name[]" placeholder="Book name" class="book-name" oninput="showSuggestions(this)" required>
           <div class="autocomplete-suggestions" style="display: none;"></div>
-      </td>
-      <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
-      <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
-      <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
-      <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
-        </tr>
+        </td>
+        <td><input type="text" name="category[]" placeholder="Category" class="book-category" required></td>
+        <td><input type="text" name="author[]" placeholder="Author" class="book-author" required></td>
+        <td><input type="number" name="quantity[]" placeholder="Quantity" class="book-quantity" min="1" required></td>
+        <td><input type="number" name="price[]" placeholder="Price" class="book-price" step="0.01" min="0" required></td>
+      </tr>
     `;
-}
+  }
 
-// Hiển thị toast
-function showToast(type) {
-  // Lấy phần tử toast tương ứng
-  const toast =
-    type === "success"
-      ? document.getElementById("toastSuccess")
-      : document.getElementById("toastError");
-
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3000);
-}
